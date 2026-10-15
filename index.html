@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Biz Ne Yapsak?</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Caveat:wght@500;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
 <style>
 /* Layout: tek sütun telefon uygulaması, yapışkan başlık + alt sekme çubuğu; kartlar fikir "biletleri" gibi */
 :root{
@@ -169,7 +169,7 @@ h2{font-family:var(--display);font-weight:400;font-size:24px;margin:6px 0 0;line
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
-nav.tabs .in{max-width:600px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav.tabs .in{max-width:600px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
 nav.tabs button{background:none;border:0;padding:9px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:700;color:var(--muted);position:relative}
 nav.tabs button svg{width:24px;height:24px}
 nav.tabs button[aria-current="page"]{color:var(--cherry)}
@@ -193,6 +193,61 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);background:var(--mi
 .seg{display:flex;background:var(--sunk);border-radius:12px;padding:3px;gap:3px}
 .seg button{flex:1;border:0;background:transparent;border-radius:9px;padding:7px 8px;font-weight:700;font-size:13.5px;color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+/* ---- fotoğraflar ---- */
+.thumbs{display:flex;gap:6px;flex-wrap:wrap}
+.thumbs button{width:56px;height:56px;border-radius:10px;overflow:hidden;border:0;padding:0;background:var(--sunk);position:relative}
+.thumbs img{width:100%;height:100%;object-fit:cover;display:block}
+.thumbs .more{display:grid;place-items:center;font-weight:800;font-size:13px;color:var(--muted)}
+.ph-in{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.album-card{border-radius:var(--r);overflow:hidden;background:linear-gradient(150deg,#FF6B8A,#B01A48);color:#FFF4F7;padding:22px 20px;display:flex;flex-direction:column;gap:10px;position:relative}
+.album-card h2{color:#FFF4F7;font-size:30px;margin:0}
+.album-card p{margin:0;opacity:.9}
+.album-card .mosaic{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
+.album-card .mosaic img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:2px solid rgba(255,255,255,.7)}
+.album-card .btn{background:#FFF4F7;color:#B01A48;align-self:flex-start}
+
+/* ---- albüm (kitap) ---- */
+.alb{position:fixed;inset:0;z-index:70;background:radial-gradient(ellipse at 50% 30%,#3a2232,#140b12 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(12px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));touch-action:pan-y}
+.alb-top{width:min(100%,460px);display:flex;justify-content:space-between;align-items:center;color:#F5E6EC;font-weight:700;font-size:14px}
+.alb-top button,.alb-nav button{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#FFF;border-radius:999px;min-width:42px;height:42px;font-size:18px;display:grid;place-items:center;padding:0 12px}
+.alb-nav{display:flex;gap:18px;align-items:center;color:#F5E6EC;font-size:13px;font-variant-numeric:tabular-nums}
+.book{perspective:1800px;width:min(100%,440px);height:min(74vh,620px);position:relative}
+.pg{position:absolute;inset:0;border-radius:6px 16px 16px 6px;background:#FBF4EA;color:#3A2430;box-shadow:0 18px 50px rgba(0,0,0,.45),inset 14px 0 18px -14px rgba(90,50,40,.35);overflow:hidden;display:flex;flex-direction:column;padding:22px 20px 16px;transform-origin:left center;backface-visibility:hidden}
+.pg::before{content:"";position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(rgba(120,80,60,.05) 1px,transparent 1px);background-size:6px 6px}
+.pg.out-next{animation:outN .55s ease-in forwards}
+.pg.in-next{animation:inN .55s ease-out}
+.pg.out-prev{animation:outP .45s ease-in forwards}
+.pg.in-prev{animation:inP .55s ease-out;transform-origin:left center}
+@keyframes outN{to{transform:rotateY(-105deg);opacity:.2}}
+@keyframes inN{from{transform:scale(.97);filter:brightness(.8)}to{transform:none;filter:none}}
+@keyframes outP{to{transform:scale(.97);opacity:0}}
+@keyframes inP{from{transform:rotateY(-105deg);opacity:.3}to{transform:none;opacity:1}}
+.pg-cover{background:linear-gradient(160deg,#E2365B,#8E1240);color:#FFF4F7;justify-content:center;align-items:center;text-align:center;gap:14px}
+.pg-cover::before{background-image:radial-gradient(rgba(255,255,255,.08) 1px,transparent 1px)}
+.pg-cover h1{font-family:var(--display);font-size:42px;line-height:1.05;color:#FFF4F7;margin:0}
+.pg-cover .hand{font-family:"Caveat",cursive;font-size:30px}
+.pg-cover .stat{font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;opacity:.85}
+.pg-cover .hearts{font-size:40px;letter-spacing:-8px}
+.pg-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;position:relative}
+.pg-date{font-family:var(--display);font-size:34px;line-height:.9;color:#E2365B}
+.pg-date small{display:block;font-family:var(--body);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8A6B74;font-weight:800;margin-top:6px}
+.pg-stars{color:#F6B93B;font-size:16px;letter-spacing:1px}
+.pg h3{font-family:var(--display);font-weight:400;font-size:24px;line-height:1.1;margin:10px 0 2px;text-wrap:balance;position:relative}
+.pg .place{font-size:13px;color:#8A6B74;position:relative}
+.pg .quote{font-family:"Caveat",cursive;font-size:24px;line-height:1.15;color:#5B3A4A;margin-top:8px;position:relative;overflow-wrap:anywhere}
+.pg-photos{flex:1;min-height:0;position:relative;margin-top:12px}
+.pol{position:absolute;background:#fff;padding:7px 7px 24px;box-shadow:0 6px 16px rgba(60,30,30,.22);border:0;cursor:zoom-in}
+.pol img{width:100%;height:100%;object-fit:cover;display:block;background:#eee}
+.pol::after{content:"";position:absolute;top:-9px;left:50%;width:62px;height:20px;transform:translateX(-50%) rotate(-3deg);background:var(--tape,rgba(246,185,59,.6))}
+.pg-foot{display:flex;justify-content:space-between;font-size:11px;color:#A58A92;font-weight:700;letter-spacing:.08em;margin-top:8px;position:relative}
+.pg-end{justify-content:center;align-items:center;text-align:center;gap:10px}
+.pg-end .hand{font-family:"Caveat",cursive;font-size:34px;color:#5B3A4A}
+.lb{position:fixed;inset:0;z-index:80;background:rgba(10,4,8,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:calc(14px + env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
+.lb img{max-width:100%;max-height:72vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+.lb .row{justify-content:center}
+.lb .meta{color:#E9D6DE;font-size:13px;text-align:center}
+@media (prefers-reduced-motion:reduce){.pg.out-next,.pg.in-next,.pg.out-prev,.pg.in-prev{animation:none}}
 @media (prefers-reduced-motion:reduce){.sheet{animation:none}.wheel.spin .t{animation:none}}
 @media (max-width:380px){.grid2{grid-template-columns:1fr}.card h3{font-size:18px}}
 </style>
@@ -212,6 +267,7 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);background:var(--mi
     <section id="tab-eslesme" hidden></section>
     <section id="tab-planlar" hidden></section>
     <section id="tab-notlar" hidden></section>
+    <section id="tab-album" hidden></section>
   </main>
 </div>
 
@@ -220,6 +276,7 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);background:var(--mi
   <button data-tab="eslesme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>Eşleşme<span class="dot" id="matchDot" hidden></span></button>
   <button data-tab="planlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Planlar</button>
   <button data-tab="notlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v12l-4 4H5z"/><path d="M15 20v-4h4M8.5 9h7M8.5 12.5h5"/></svg>Notlar</button>
+  <button data-tab="album"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"/><path d="M8 3v18"/><path d="M13.5 9.5c.6-1 2.5-1 2.5.6 0 1.3-2.5 2.9-2.5 2.9S11 11.4 11 10.1c0-1.6 1.9-1.6 2.5-.6z"/></svg>Albüm</button>
 </div></nav>
 
 <div id="sheetRoot"></div>
@@ -433,7 +490,7 @@ const ui={tab:"kesfet",city:"İstanbul",cat:"all",budget:0,show:"all",from:12,to
 try{const s=JSON.parse(localStorage.getItem("bny-ui")||"{}");Object.assign(ui,s);if(!CITIES.includes(ui.city))ui.city="İstanbul"}catch(e){}
 function saveUI(){try{localStorage.setItem("bny-ui",JSON.stringify(ui))}catch(e){}}
 
-const S={votes:{},plans:[],ideas:[],notes:[]}; // votes: key -> {uid,idea,v}
+const S={votes:{},plans:[],ideas:[],notes:[],photos:[]}; // votes: key -> {uid,idea,v}
 let db=null,user=null,myId="me",shared=false,readOnly=false;
 const people={}; // id -> {name,avatarUrl}
 
@@ -528,12 +585,13 @@ function render(skipPeople){
   $("#cities").innerHTML=CITIES.map(c=>`<button class="chip" aria-pressed="${c===ui.city}" data-city="${esc(c)}">${esc(c)}</button>`).join("");
   // tabs
   document.querySelectorAll("nav.tabs button").forEach(b=>b.toggleAttribute("aria-current",false)||b.dataset.tab===ui.tab&&b.setAttribute("aria-current","page"));
-  ["kesfet","eslesme","planlar","notlar"].forEach(t=>$("#tab-"+t).hidden=t!==ui.tab);
+  ["kesfet","eslesme","planlar","notlar","album"].forEach(t=>$("#tab-"+t).hidden=t!==ui.tab);
   const mc=matches().length;const dot=$("#matchDot");dot.hidden=!mc;dot.textContent=mc;
   if(ui.tab==="kesfet")renderKesfet();
   if(ui.tab==="eslesme")renderEslesme();
   if(ui.tab==="planlar")renderPlanlar();
   if(ui.tab==="notlar")renderNotlar();
+  if(ui.tab==="album")renderAlbumTab();
   if(!skipPeople)resolvePeople();
 }
 
@@ -632,7 +690,8 @@ function planCard(p){
         <div class="row"><button class="btn soft sm" data-done="${p.id}">Yaptık ✓</button><button class="btn line sm" data-edit="${p.id}">Düzenle</button><button class="btn line sm" data-del="${p.id}">Sil</button></div>`
       :`<div class="stars" role="group" aria-label="Puan">${[1,2,3,4,5].map(s=>`<button class="${s<=r?"on":""}" data-rate="${p.id}" data-s="${s}" aria-label="${s} yıldız">★</button>`).join("")}</div>
         ${p.memory?`<div class="memo">“${esc(p.memory)}”</div>`:""}
-        <div class="row"><button class="btn soft sm" data-memo="${p.id}">${p.memory?"Anıyı düzenle":"Anı yaz"}</button><button class="btn line sm" data-del="${p.id}">Sil</button></div>`}
+        ${photoThumbs(p.id)}
+        <div class="row"><label class="btn cherry sm" for="ph-${p.id}">📷 Fotoğraf ekle</label><input class="ph-in" type="file" accept="image/*" multiple id="ph-${p.id}" data-photo="${p.id}"><button class="btn soft sm" data-memo="${p.id}">${p.memory?"Anıyı düzenle":"Anı yaz"}</button><button class="btn line sm" data-del="${p.id}">Sil</button></div>`}
     </div></article>`;
 }
 function renderPlanlar(){
@@ -750,7 +809,9 @@ document.addEventListener("click",e=>{
   if(t.dataset.vote){setVote(t.dataset.vote,t.dataset.v);return}
   if(t.dataset.plan){planSheet(t.dataset.plan);return}
   if(t.dataset.edit){planSheet(null,t.dataset.edit);return}
-  if(t.dataset.done){patchDoc("plans",t.dataset.done,{done:true});toast("Harika! Şimdi yıldız verip anı yazın.");return}
+  if(t.dataset.done){patchDoc("plans",t.dataset.done,{done:true});toast("Harika! Yıldız verin, anı yazın ve fotoğraf ekleyin 📷");return}
+  if(t.dataset.pview){openLightbox(t.dataset.pview);return}
+  if(t.dataset.openalbum!==undefined){openAlbum(+t.dataset.openalbum||0);return}
   if(t.dataset.del){const id=t.dataset.del;if(t.dataset.sure){delDoc("plans",id)}else{t.dataset.sure="1";t.textContent="Emin misin?";setTimeout(()=>{if(t.isConnected){delete t.dataset.sure;t.textContent="Sil"}},3000)}return}
   if(t.dataset.rate){patchDoc("plans",t.dataset.rate,{rating:+t.dataset.s});return}
   if(t.dataset.memo){memoSheet(t.dataset.memo);return}
@@ -799,12 +860,13 @@ async function joinRoom(code,isNew){
   const base=fs.collection("rooms").doc(code);
   db={collection:name=>base.collection(name)};
   shared=true;readOnly=false;
-  S.votes={};S.plans=[];S.ideas=[];S.notes=[];members=[];
+  S.votes={};S.plans=[];S.ideas=[];S.notes=[];S.photos=[];members=[];
   try{await base.collection("members").doc(myId).set({name:lsGet("bny-name")||"",ts:Date.now()})}catch(e){denied(e)}
   const err=e=>{console.error(e);if(e&&e.code==="permission-denied")toast("Veriler okunamadı: Firestore kurallarını kontrol et.")};
   unsubs.push(base.collection("members").onSnapshot(s=>{members=s.docs.map(x=>x.id);s.docs.forEach(x=>{people[x.id]={name:x.data().name||"",avatarUrl:""}});render()},err));
   unsubs.push(db.collection("votes").onSnapshot(s=>{const m={};s.docs.forEach(x=>{const v=x.data();if(v&&v.uid&&v.idea&&v.v)m[x.id]=v});S.votes=m;render()},err));
   ["plans","ideas","notes"].forEach(col=>unsubs.push(db.collection(col).onSnapshot(s=>{S[col]=s.docs.map(x=>({id:x.id,...x.data()}));render()},err)));
+  unsubs.push(db.collection("photos").onSnapshot(s=>{S.photos=s.docs.map(x=>({id:x.id,...x.data()}));render();if(albumOpen)drawPage(0)},err));
   render();initSW();
 }
 
@@ -827,6 +889,146 @@ function roomSheet(){
       unsubs.forEach(u=>u());unsubs=[];shared=false;room=null;lsSet("bny-room-v2",null);history.replaceState(null,"",location.pathname);closeSheet();loadLocal();render();onboard()};
   });
 }
+
+/* ------------------ FOTOĞRAFLAR & ALBÜM ------------------ */
+const MAX_PER_DATE=12;
+function plansPhotos(pid){return S.photos.filter(x=>x.plan===pid).sort((a,b)=>a.ts-b.ts)}
+function photoThumbs(pid){
+  const ph=plansPhotos(pid);if(!ph.length)return "";
+  const show=ph.slice(0,5),more=ph.length-show.length;
+  return `<div class="thumbs">${show.map(x=>`<button data-pview="${x.id}" aria-label="Fotoğrafı aç"><img src="${x.thumb}" alt="" loading="lazy"></button>`).join("")}${more>0?`<button class="more" data-pview="${ph[5].id}">+${more}</button>`:""}</div>`;
+}
+async function loadBitmap(file){
+  try{return await createImageBitmap(file,{imageOrientation:"from-image"})}catch(e){}
+  return await new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{res(im)};im.onerror=()=>rej(new Error("Görsel açılamadı"));im.src=u});
+}
+function toJpeg(src,max,q,limit){
+  const w=src.width,h=src.height,k=Math.min(1,max/Math.max(w,h));
+  const c=document.createElement("canvas");c.width=Math.round(w*k);c.height=Math.round(h*k);
+  const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.drawImage(src,0,0,c.width,c.height);
+  let d=c.toDataURL("image/jpeg",q);
+  while(limit&&d.length>limit&&q>0.4){q-=0.1;d=c.toDataURL("image/jpeg",q)}
+  return {data:d,w:c.width,h:c.height};
+}
+async function addPhotos(pid,files){
+  if(!shared||!fs)return toast("Fotoğraf eklemek için odaya bağlı olmalısın.");
+  const have=plansPhotos(pid).length;files=[...files].filter(f=>/^image\//.test(f.type)||/\.(heic|heif|jpe?g|png|webp)$/i.test(f.name));
+  if(!files.length)return;
+  if(have+files.length>MAX_PER_DATE){toast(`Her date için en fazla ${MAX_PER_DATE} fotoğraf. İlk ${Math.max(0,MAX_PER_DATE-have)} tanesi eklenecek.`);files=files.slice(0,Math.max(0,MAX_PER_DATE-have))}
+  let ok=0;
+  for(let i=0;i<files.length;i++){
+    toast(`Fotoğraf yükleniyor ${i+1}/${files.length}…`);
+    try{
+      const bmp=await loadBitmap(files[i]);
+      const th=toJpeg(bmp,640,0.72,120000),full=toJpeg(bmp,1600,0.82,700000);
+      const id=newId(),ts=Date.now();
+      await fs.collection("rooms").doc(room).collection("photoFull").doc(id).set({data:full.data,plan:pid});
+      await db.collection("photos").doc(id).set({plan:pid,thumb:th.data,w:full.w,h:full.h,by:myId,ts});
+      ok++;
+    }catch(e){console.error(e);toast("Bir fotoğraf yüklenemedi"+(e&&e.code==="permission-denied"?": izin yok.":"."))}
+  }
+  if(ok)toast(ok===1?"Fotoğraf albüme eklendi 📸":`${ok} fotoğraf albüme eklendi 📸`);
+}
+document.addEventListener("change",e=>{const t=e.target;if(t&&t.dataset&&t.dataset.photo){const f=t.files;addPhotos(t.dataset.photo,f).finally(()=>{try{t.value=""}catch(_){}})}});
+
+/* tam boy görüntüleyici */
+const fullCache={};
+async function getFull(id){if(fullCache[id])return fullCache[id];try{const d=await fs.collection("rooms").doc(room).collection("photoFull").doc(id).get();if(d.exists){fullCache[id]=d.data().data;return fullCache[id]}}catch(e){}return null}
+function openLightbox(id){
+  const ph=S.photos.find(x=>x.id===id);if(!ph)return;
+  const list=plansPhotos(ph.plan),idx=list.findIndex(x=>x.id===id),plan=S.plans.find(p=>p.id===ph.plan);
+  let root=$("#lbRoot");if(!root){root=document.createElement("div");root.id="lbRoot";document.body.appendChild(root)}
+  root.innerHTML=`<div class="lb" role="dialog" aria-modal="true"><img id="lbImg" src="${ph.thumb}" alt="">
+  <div class="meta">${esc(plan?plan.title:"")} · ${idx+1}/${list.length} · ${esc(pname(ph.by))} ekledi</div>
+  <div class="row"><button class="btn soft sm" id="lbPrev" ${idx<1?"disabled":""}>‹ Önceki</button><button class="btn soft sm" id="lbNext" ${idx>=list.length-1?"disabled":""}>Sonraki ›</button>${ph.by===myId?'<button class="btn line sm" id="lbDel" style="color:#fff;border-color:rgba(255,255,255,.3)">Sil</button>':""}<button class="btn cherry sm" id="lbX">Kapat</button></div></div>`;
+  const close=()=>root.innerHTML="";
+  root.querySelector(".lb").onclick=e=>{if(e.target.classList.contains("lb"))close()};
+  root.querySelector("#lbX").onclick=close;
+  root.querySelector("#lbPrev").onclick=()=>idx>0&&openLightbox(list[idx-1].id);
+  root.querySelector("#lbNext").onclick=()=>idx<list.length-1&&openLightbox(list[idx+1].id);
+  const del=root.querySelector("#lbDel");
+  if(del)del.onclick=async()=>{if(!del.dataset.sure){del.dataset.sure=1;del.textContent="Emin misin?";return}close();
+    try{await db.collection("photos").doc(id).delete();await fs.collection("rooms").doc(room).collection("photoFull").doc(id).delete();toast("Fotoğraf silindi.")}catch(e){denied(e)}};
+  getFull(id).then(d=>{const im=$("#lbImg");if(d&&im&&root.innerHTML)im.src=d});
+}
+
+/* albüm sayfaları */
+function albumPlans(){return S.plans.filter(p=>(p.done||daysTo(p.date)<0)&&(plansPhotos(p.id).length||p.memory||+p.rating)).sort((a,b)=>(a.date+(a.time||"")).localeCompare(b.date+(b.time||"")))}
+function buildPages(){
+  const pages=[{t:"cover"}];
+  albumPlans().forEach(p=>{
+    const ph=plansPhotos(p.id);
+    const first=ph.slice(0,ph.length>4?3:4);pages.push({t:"date",p,ph:first,cont:false});
+    for(let i=first.length;i<ph.length;i+=4)pages.push({t:"date",p,ph:ph.slice(i,i+4),cont:true});
+  });
+  pages.push({t:"end"});return pages;
+}
+const TAPES=["rgba(246,185,59,.6)","rgba(79,209,177,.55)","rgba(255,140,170,.6)","rgba(160,140,230,.5)"];
+const LAYOUTS={
+  1:[[8,4,84,88,-2]],
+  2:[[2,4,58,60,-5],[38,36,58,60,4]],
+  3:[[4,2,62,56,-3],[50,40,46,44,5],[2,58,44,40,-6]],
+  4:[[2,2,48,47,-4],[50,4,48,47,3],[3,51,48,47,2],[49,52,48,47,-3]]
+};
+function photoBlock(ph,seed){
+  const L=LAYOUTS[ph.length]||[];
+  return ph.map((x,i)=>{const [l,t,w,h,r]=L[i];return `<button class="pol" data-pview="${x.id}" style="left:${l}%;top:${t}%;width:${w}%;height:${h}%;transform:rotate(${r}deg);--tape:${TAPES[(i+seed)%4]}" aria-label="Fotoğrafı büyüt"><img src="${x.thumb}" alt=""></button>`}).join("");
+}
+function pageHTML(pg,i,n){
+  if(pg.t==="cover"){
+    const ap=albumPlans(),phN=S.photos.length,names=[myId,partnerId()].filter(Boolean).map(id=>esc(id===myId?(people[id]?.name||"Biz"):(people[id]?.name||"Sevgilin")));
+    const first=ap[0]?pdate(ap[0].date):null;
+    return `<div class="pg pg-cover"><div class="hearts">♥♥</div><h1>Bizim<br>Albümümüz</h1><div class="hand">${names.join(" & ")}</div><div class="stat">${ap.length} date · ${phN} fotoğraf${first?` · ${AY[first.getMonth()]} ${first.getFullYear()}'den beri`:""}</div></div>`;
+  }
+  if(pg.t==="end")return `<div class="pg pg-end"><div style="font-size:44px;color:#E2365B">♥</div><div class="hand">Devamı gelecek…</div><p class="place">Bir sonraki date'i planlamaya ne dersiniz?</p></div>`;
+  const p=pg.p,d=pdate(p.date),r=+p.rating||0;
+  const loc=[p.place,p.city&&p.city!=="*"?p.city:""].filter(Boolean).join(", ");
+  return `<div class="pg"><div class="pg-head"><div class="pg-date">${d.getDate()} ${AY[d.getMonth()]}<small>${GUN[d.getDay()]} · ${d.getFullYear()}${pg.cont?" · devamı":""}</small></div>${r?`<div class="pg-stars">${"★".repeat(r)}</div>`:""}</div>
+    ${pg.cont?"":`<h3>${esc(p.title)}</h3>${loc?`<div class="place">${esc(loc)}</div>`:""}${p.memory?`<div class="quote">“${esc(p.memory)}”</div>`:""}`}
+    <div class="pg-photos">${pg.ph.length?photoBlock(pg.ph,i):`<div style="position:absolute;inset:0;display:grid;place-items:center;font-family:Caveat,cursive;font-size:26px;color:#B79AA4;text-align:center">fotoğraf yok ama<br>güzel bir gündü ♥</div>`}</div>
+    <div class="pg-foot"><span>BİZ NE YAPSAK?</span><span>${i} / ${n-2}</span></div></div>`;
+}
+let albumOpen=false,albPages=[],albIdx=0,albBusy=false;
+function openAlbum(start){
+  albPages=buildPages();albIdx=Math.min(start||0,albPages.length-1);albumOpen=true;
+  let root=$("#albRoot");if(!root){root=document.createElement("div");root.id="albRoot";document.body.appendChild(root)}
+  root.innerHTML=`<div class="alb" role="dialog" aria-modal="true" aria-label="Albüm"><div class="alb-top"><span id="albCount"></span><button id="albX" aria-label="Kapat">✕</button></div><div class="book" id="book"></div><div class="alb-nav"><button id="albP" aria-label="Önceki sayfa">‹</button><span>kaydır ya da dokun</span><button id="albN" aria-label="Sonraki sayfa">›</button></div></div>`;
+  root.querySelector("#albX").onclick=closeAlbum;
+  root.querySelector("#albP").onclick=()=>flip(-1);
+  root.querySelector("#albN").onclick=()=>flip(1);
+  const bk=root.querySelector("#book");let sx=null,sy=0;
+  bk.addEventListener("touchstart",e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
+  bk.addEventListener("touchend",e=>{if(sx==null)return;const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;sx=null;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy))flip(dx<0?1:-1)});
+  drawPage(0);document.documentElement.style.overflow="hidden";
+}
+function closeAlbum(){albumOpen=false;const r=$("#albRoot");if(r)r.innerHTML="";document.documentElement.style.overflow=""}
+function drawPage(dir){
+  if(!albumOpen)return;albPages=buildPages();albIdx=Math.max(0,Math.min(albIdx,albPages.length-1));
+  const bk=$("#book");if(!bk)return;
+  const html=pageHTML(albPages[albIdx],albIdx,albPages.length);
+  const old=bk.querySelector(".pg");
+  const tmp=document.createElement("div");tmp.innerHTML=html;const nw=tmp.firstElementChild;
+  if(old&&dir){
+    if(dir>0){bk.insertBefore(nw,old);nw.classList.add("in-next");old.classList.add("out-next")}
+    else{bk.appendChild(nw);nw.classList.add("in-prev");old.classList.add("out-prev")}
+    albBusy=true;setTimeout(()=>{old.remove();nw.className=nw.className.replace(/ ?(in|out)-(next|prev)/g,"");albBusy=false},560);
+  }else{bk.innerHTML="";bk.appendChild(nw)}
+  $("#albCount").textContent=albIdx===0?"Kapak":albIdx===albPages.length-1?"Son sayfa":`Sayfa ${albIdx} / ${albPages.length-2}`;
+  $("#albP").disabled=albIdx===0;$("#albN").disabled=albIdx===albPages.length-1;
+}
+function flip(d){if(albBusy)return;const n=albIdx+d;if(n<0||n>=albPages.length)return;albIdx=n;drawPage(d)}
+document.addEventListener("keydown",e=>{if(!albumOpen)return;if(e.key==="ArrowRight")flip(1);else if(e.key==="ArrowLeft")flip(-1);else if(e.key==="Escape")closeAlbum()});
+
+function renderAlbumTab(){
+  const el=$("#tab-album"),ap=albumPlans(),ph=[...S.photos].sort((a,b)=>b.ts-a.ts);
+  el.innerHTML=`${banners()}<div class="album-card"><h2>Bizim Albümümüz</h2><p>${ap.length?`${ap.length} date, ${ph.length} fotoğraf. Sayfa sayfa gezin.`:"Yaptığınız date'lere fotoğraf ve anı ekledikçe albüm kendiliğinden dolacak."}</p>
+  ${ph.length?`<div class="mosaic">${ph.slice(0,8).map(x=>`<img src="${x.thumb}" alt="">`).join("")}</div>`:""}
+  <button class="btn" data-openalbum="0">📖 Albümü aç</button></div>
+  <h2>Date'ler</h2><p class="sub">Bir date'e dokun, albümde o sayfaya git. Fotoğrafları Planlar → Anı defteri'nden ekleyebilirsin.</p>
+  ${ap.length?ap.map((p,k)=>{const n=plansPhotos(p.id).length,d=pdate(p.date);return `<button class="card" data-openalbum="${1+albumPageIndex(p.id)}" style="text-align:left;flex-direction:row;align-items:center;gap:12px">${n?`<img src="${plansPhotos(p.id)[0].thumb}" alt="" style="width:56px;height:56px;border-radius:10px;object-fit:cover;flex:0 0 auto">`:`<span style="width:56px;height:56px;border-radius:10px;background:var(--sunk);display:grid;place-items:center;flex:0 0 auto;color:var(--cherry)">♥</span>`}<span style="min-width:0"><b style="display:block">${esc(p.title)}</b><span class="count">${d.getDate()} ${AY[d.getMonth()]} ${d.getFullYear()} · ${n} fotoğraf${+p.rating?" · "+"★".repeat(+p.rating):""}</span></span></button>`}).join("")
+  :`<div class="empty"><b>Albüm henüz boş</b>Planlar'da bir date'i "Yaptık ✓" diye işaretleyip fotoğraf ekleyin.</div>`}`;
+}
+function albumPageIndex(pid){const pg=buildPages();const i=pg.findIndex(x=>x.p&&x.p.id===pid);return Math.max(0,i-1)}
 
 /* ------------------ BİLDİRİMLER ------------------ */
 const UA=navigator.userAgent;

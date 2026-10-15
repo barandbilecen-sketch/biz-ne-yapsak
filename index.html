@@ -247,6 +247,16 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);background:var(--mi
 .lb img{max-width:100%;max-height:72vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
 .lb .row{justify-content:center}
 .lb .meta{color:#E9D6DE;font-size:13px;text-align:center}
+/* ---- not fotoğrafları ---- */
+.note-ph{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px}
+.note-ph.one{grid-template-columns:1fr}
+.note-ph button{border:0;padding:0;border-radius:9px;overflow:hidden;background:rgba(0,0,0,.06);aspect-ratio:1}
+.note-ph.one button{aspect-ratio:4/3}
+.note-ph img{width:100%;height:100%;object-fit:cover;display:block}
+.nprev{display:flex;gap:8px;flex-wrap:wrap}
+.nprev span{position:relative;width:64px;height:64px;border-radius:10px;overflow:hidden;background:var(--sunk)}
+.nprev img{width:100%;height:100%;object-fit:cover}
+.nprev button{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:14px;line-height:1;padding:0}
 /* ---- tanıtım ---- */
 .intro{display:flex;flex-direction:column;gap:14px;min-height:min(560px,78vh)}
 .intro .slide{flex:1;display:flex;flex-direction:column;gap:12px;animation:fadeUp .3s ease-out}
@@ -730,9 +740,11 @@ function renderNotlar(){
   const el=$("#tab-notlar");
   const ns=[...S.notes].sort((a,b)=>b.ts-a.ts);
   el.innerHTML=`${banners()}<h2>Küçük notlar</h2><p class="sub">Birbirinize tatlı bir şey bırakın. Açtığında karşısına çıksın.</p>
-  <div class="field"><label for="noteIn">Notun</label><textarea id="noteIn" rows="3" maxlength="280" placeholder="Bugün gülüşün aklımdan çıkmadı..."></textarea></div>
-  <button class="btn cherry" id="noteBtn">Notu bırak</button>
-  ${ns.length?`<div class="notes">${ns.map((n,k)=>`<div class="note-card" style="--c:${NOTE_COLORS[(n.ts||k)%5]};--rot:${((n.ts||k)%5-2)*.6}deg"><p>${esc(n.text)}</p><div class="by"><span>${esc(pname(n.by))} · ${new Date(n.ts).getDate()} ${AY[new Date(n.ts).getMonth()]}</span>${n.by===myId?`<button class="x" data-delnote="${n.id}" aria-label="Notu sil">×</button>`:""}</div></div>`).join("")}</div>`:`<div class="empty"><b>Henüz not yok</b>İlk tatlı notu sen bırak.</div>`}`;
+  <div class="field"><label for="noteIn">Notun</label><textarea id="noteIn" rows="3" maxlength="280" placeholder="Bugün gülüşün aklımdan çıkmadı...">${esc(noteDraft)}</textarea></div>
+  ${noteFiles.length?`<div class="nprev">${noteFiles.map((f,k)=>`<span><img src="${f.url}" alt=""><button data-nrm="${k}" aria-label="Fotoğrafı çıkar">×</button></span>`).join("")}</div>`:""}
+  <div class="actions"><label class="btn line" for="noteFile">📷 Fotoğraf ekle</label><button class="btn cherry" id="noteBtn" ${noteBusy?"disabled":""}>${noteBusy?"Gönderiliyor…":"Notu bırak"}</button></div>
+  <input class="ph-in" type="file" accept="image/*" multiple id="noteFile">
+  ${ns.length?`<div class="notes">${ns.map((n,k)=>{const nph=plansPhotos("note-"+n.id);return `<div class="note-card" style="--c:${NOTE_COLORS[(n.ts||k)%5]};--rot:${((n.ts||k)%5-2)*.6}deg">${nph.length?`<div class="note-ph ${nph.length===1?"one":""}">${nph.map(x=>`<button data-pview="${x.id}" aria-label="Fotoğrafı aç"><img src="${x.thumb}" alt="" loading="lazy"></button>`).join("")}</div>`:""}${n.text?`<p>${esc(n.text)}</p>`:""}<div class="by"><span>${esc(pname(n.by))} · ${new Date(n.ts).getDate()} ${AY[new Date(n.ts).getMonth()]}</span>${n.by===myId?`<button class="x" data-delnote="${n.id}" aria-label="Notu sil">×</button>`:""}</div></div>`}).join("")}</div>`:`<div class="empty"><b>Henüz not yok</b>İlk tatlı notu sen bırak.</div>`}`;
 }
 
 /* ------------------ SAYFALAR (SHEET) ------------------ */
@@ -775,7 +787,7 @@ function memoSheet(id){
   const p=S.plans.find(x=>x.id===id);
   sheet(`<h3>Bu date nasıldı?</h3><div class="field"><label for="mIn">Bir cümlelik anı</label><textarea id="mIn" rows="3" maxlength="240" placeholder="En çok güldüğümüz an...">${esc(p.memory||"")}</textarea></div>
   <div class="actions"><button class="btn line" id="mC">Vazgeç</button><button class="btn cherry" id="mS">Kaydet</button></div>`,s=>{
-    s.querySelector("#mC").onclick=closeSheet;s.querySelector("#mS").onclick=()=>{patchDoc("plans",id,{memory:$("#mIn").value.trim()});closeSheet()}});
+    s.querySelector("#mC").onclick=closeSheet;s.querySelector("#mS").onclick=()=>{const m=$("#mIn").value.trim();patchDoc("plans",id,{memory:m});if(m&&m!==(p.memory||""))notify("memory",{title:p.title,text:m});closeSheet()}});
 }
 function ideaSheet(){
   sheet(`<h3>Kendi fikrimiz</h3>
@@ -790,7 +802,7 @@ function ideaSheet(){
     s.querySelector("#iX").onclick=closeSheet;
     s.querySelector("#iS").onclick=async()=>{const t=$("#iT").value.trim();if(!t)return toast("Fikre bir isim verin.");
       const data={t,d:$("#iD").value.trim(),cat:$("#iC").value,b:+$("#iB").value,w:$("#iW").value,city:$("#iCity").value,p:$("#iP").value.trim()};
-      closeSheet();const id=await addDoc("ideas",data);if(id&&!readOnly){toast("Fikriniz eklendi, ilk kalbi de attık.");setVote("c-"+id,"love")}};
+      closeSheet();const id=await addDoc("ideas",data);if(id&&!readOnly){notify("idea",{title:data.t});toast("Fikriniz eklendi, ilk kalbi de attık.");setVote("c-"+id,"love")}};
   });
 }
 function spinSheet(){
@@ -829,18 +841,19 @@ document.addEventListener("click",e=>{
   if(t.dataset.vote){setVote(t.dataset.vote,t.dataset.v);return}
   if(t.dataset.plan){planSheet(t.dataset.plan);return}
   if(t.dataset.edit){planSheet(null,t.dataset.edit);return}
-  if(t.dataset.done){patchDoc("plans",t.dataset.done,{done:true});toast("Harika! Yıldız verin, anı yazın ve fotoğraf ekleyin 📷");return}
+  if(t.dataset.done){const pl=S.plans.find(x=>x.id===t.dataset.done);patchDoc("plans",t.dataset.done,{done:true});if(pl)notify("done",{title:pl.title});toast("Harika! Yıldız verin, anı yazın ve fotoğraf ekleyin 📷");return}
   if(t.dataset.pview){openLightbox(t.dataset.pview);return}
   if(t.dataset.openalbum!==undefined){openAlbum(+t.dataset.openalbum||0);return}
   if(t.dataset.del){const id=t.dataset.del;if(t.dataset.sure){delDoc("plans",id)}else{t.dataset.sure="1";t.textContent="Emin misin?";setTimeout(()=>{if(t.isConnected){delete t.dataset.sure;t.textContent="Sil"}},3000)}return}
   if(t.dataset.rate){patchDoc("plans",t.dataset.rate,{rating:+t.dataset.s});return}
   if(t.dataset.memo){memoSheet(t.dataset.memo);return}
-  if(t.dataset.delnote){delDoc("notes",t.dataset.delnote);return}
+  if(t.dataset.delnote){const nid=t.dataset.delnote;delDoc("notes",nid);plansPhotos("note-"+nid).forEach(x=>{db.collection("photos").doc(x.id).delete().catch(()=>{});fs.collection("rooms").doc(room).collection("photoFull").doc(x.id).delete().catch(()=>{})});return}
   if(t.dataset.room){roomSheet();return}
   if(t.dataset.notif){notifSheet();return}
   if(t.id==="spinBtn"||t.id==="spinBtn2"){spinSheet();return}
   if(t.id==="addIdeaBtn"){ideaSheet();return}
-  if(t.id==="noteBtn"){const v=$("#noteIn").value.trim();if(!v)return toast("Önce bir şey yaz.");addDoc("notes",{text:v});return}
+  if(t.id==="noteBtn"){sendNote();return}
+  if(t.dataset.nrm!==undefined){const k=+t.dataset.nrm;try{URL.revokeObjectURL(noteFiles[k].url)}catch(e){}noteFiles.splice(k,1);render();return}
 });
 
 document.addEventListener("change",e=>{
@@ -937,7 +950,7 @@ async function addPhotos(pid,files){
   const have=plansPhotos(pid).length;files=[...files].filter(f=>/^image\//.test(f.type)||/\.(heic|heif|jpe?g|png|webp)$/i.test(f.name));
   if(!files.length)return;
   if(have+files.length>MAX_PER_DATE){toast(`Her date için en fazla ${MAX_PER_DATE} fotoğraf. İlk ${Math.max(0,MAX_PER_DATE-have)} tanesi eklenecek.`);files=files.slice(0,Math.max(0,MAX_PER_DATE-have))}
-  let ok=0;
+  let ok=0;const isNote=String(pid).startsWith("note-");
   for(let i=0;i<files.length;i++){
     toast(`Fotoğraf yükleniyor ${i+1}/${files.length}…`);
     try{
@@ -949,9 +962,32 @@ async function addPhotos(pid,files){
       ok++;
     }catch(e){console.error(e);toast("Bir fotoğraf yüklenemedi"+(e&&e.code==="permission-denied"?": izin yok.":"."))}
   }
-  if(ok)toast(ok===1?"Fotoğraf albüme eklendi 📸":`${ok} fotoğraf albüme eklendi 📸`);
+  if(ok&&!isNote){toast(ok===1?"Fotoğraf albüme eklendi 📸":`${ok} fotoğraf albüme eklendi 📸`);const pl=S.plans.find(x=>x.id===pid);notify("photo",{title:pl?pl.title:"",count:ok})}
+  return ok;
 }
 document.addEventListener("change",e=>{const t=e.target;if(t&&t.dataset&&t.dataset.photo){const f=t.files;addPhotos(t.dataset.photo,f).finally(()=>{try{t.value=""}catch(_){}})}});
+
+/* not + fotoğraf */
+let noteDraft="",noteFiles=[],noteBusy=false;
+document.addEventListener("input",e=>{if(e.target&&e.target.id==="noteIn")noteDraft=e.target.value});
+document.addEventListener("change",e=>{if(e.target&&e.target.id==="noteFile"){const fl=[...e.target.files].slice(0,4-noteFiles.length);if(e.target.files.length>fl.length)toast("Bir nota en fazla 4 fotoğraf eklenebilir.");fl.forEach(f=>noteFiles.push({file:f,url:URL.createObjectURL(f)}));render()}});
+async function sendNote(){
+  const text=(noteDraft||"").trim();
+  if(!text&&!noteFiles.length)return toast("Bir şey yaz ya da fotoğraf ekle.");
+  if(readOnly)return toast("Sadece görüntüleme izni var.");
+  if(noteFiles.length&&(!shared||!fs))return toast("Fotoğraflı not için odaya bağlı olmalısın.");
+  noteBusy=true;render();
+  const id=newId(),files=noteFiles.map(x=>x.file);let n=0;
+  try{
+    if(files.length)n=await addPhotos("note-"+id,files);
+    const data={text,by:myId,ts:Date.now(),ph:n};
+    if(shared){await db.collection("notes").doc(id).set(data)}else{S.notes.push({id,...data});saveLocal()}
+    notify("note",{text,photos:n});
+    noteFiles.forEach(x=>{try{URL.revokeObjectURL(x.url)}catch(e){}});noteFiles=[];noteDraft="";
+    toast(n?"Fotoğraflı notun bırakıldı 💌":"Notun bırakıldı 💌");
+  }catch(e){denied(e)}
+  noteBusy=false;render();
+}
 
 /* tam boy görüntüleyici */
 const fullCache={};
@@ -961,7 +997,7 @@ function openLightbox(id){
   const list=plansPhotos(ph.plan),idx=list.findIndex(x=>x.id===id),plan=S.plans.find(p=>p.id===ph.plan);
   let root=$("#lbRoot");if(!root){root=document.createElement("div");root.id="lbRoot";document.body.appendChild(root)}
   root.innerHTML=`<div class="lb" role="dialog" aria-modal="true"><img id="lbImg" src="${ph.thumb}" alt="">
-  <div class="meta">${esc(plan?plan.title:"")} · ${idx+1}/${list.length} · ${esc(pname(ph.by))} ekledi</div>
+  <div class="meta">${esc(plan?plan.title:String(ph.plan).startsWith("note-")?"Not":"")} · ${idx+1}/${list.length} · ${esc(pname(ph.by))} ekledi</div>
   <div class="row"><button class="btn soft sm" id="lbPrev" ${idx<1?"disabled":""}>‹ Önceki</button><button class="btn soft sm" id="lbNext" ${idx>=list.length-1?"disabled":""}>Sonraki ›</button>${ph.by===myId?'<button class="btn line sm" id="lbDel" style="color:#fff;border-color:rgba(255,255,255,.3)">Sil</button>':""}<button class="btn cherry sm" id="lbX">Kapat</button></div></div>`;
   const close=()=>root.innerHTML="";
   root.querySelector(".lb").onclick=e=>{if(e.target.classList.contains("lb"))close()};
@@ -998,7 +1034,7 @@ function photoBlock(ph,seed){
 }
 function pageHTML(pg,i,n){
   if(pg.t==="cover"){
-    const ap=albumPlans(),phN=S.photos.length,names=[myId,partnerId()].filter(Boolean).map(id=>esc(id===myId?(people[id]?.name||"Biz"):(people[id]?.name||"Sevgilin")));
+    const ap=albumPlans(),phN=S.photos.filter(x=>!String(x.plan).startsWith("note-")).length,names=[myId,partnerId()].filter(Boolean).map(id=>esc(id===myId?(people[id]?.name||"Biz"):(people[id]?.name||"Sevgilin")));
     const first=ap[0]?pdate(ap[0].date):null;
     return `<div class="pg pg-cover"><div class="hearts">♥♥</div><h1>Bizim<br>Albümümüz</h1><div class="hand">${names.join(" & ")}</div><div class="stat">${ap.length} date · ${phN} fotoğraf${first?` · ${AY[first.getMonth()]} ${first.getFullYear()}'den beri`:""}</div></div>`;
   }
@@ -1042,7 +1078,7 @@ function flip(d){if(albBusy)return;const n=albIdx+d;if(n<0||n>=albPages.length)r
 document.addEventListener("keydown",e=>{if(!albumOpen)return;if(e.key==="ArrowRight")flip(1);else if(e.key==="ArrowLeft")flip(-1);else if(e.key==="Escape")closeAlbum()});
 
 function renderAlbumTab(){
-  const el=$("#tab-album"),ap=albumPlans(),ph=[...S.photos].sort((a,b)=>b.ts-a.ts);
+  const el=$("#tab-album"),ap=albumPlans(),ph=S.photos.filter(x=>!String(x.plan).startsWith("note-")).sort((a,b)=>b.ts-a.ts);
   el.innerHTML=`${banners()}<div class="album-card"><h2>Bizim Albümümüz</h2><p>${ap.length?`${ap.length} date, ${ph.length} fotoğraf. Sayfa sayfa gezin.`:"Yaptığınız date'lere fotoğraf ve anı ekledikçe albüm kendiliğinden dolacak."}</p>
   ${ph.length?`<div class="mosaic">${ph.slice(0,8).map(x=>`<img src="${x.thumb}" alt="">`).join("")}</div>`:""}
   <button class="btn" data-openalbum="0">📖 Albümü aç</button></div>
@@ -1058,8 +1094,9 @@ const isIOS=/iPhone|iPad|iPod/.test(UA)||(navigator.platform==="MacIntel"&&navig
 const isStandalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
 const pushSupported="serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window;
 let swReg=null,pushOn=false;
-const PREF_KEYS=[["love","Sevgilin bir fikre bayılınca"],["match","Eşleşme olunca","İkiniz de aynı fikre bayılınca"],["plan","Yeni date planlanınca"],["remind","Date yaklaşınca","1 gün ve 2 saat önce"]];
-function getPrefs(){try{return Object.assign({love:true,match:true,plan:true,remind:true},JSON.parse(lsGet("bny-prefs")||"{}"))}catch(e){return {love:true,match:true,plan:true,remind:true}}}
+const PREF_KEYS=[["love","Sevgilin bir fikre bayılınca"],["match","Eşleşme olunca","İkiniz de aynı fikre bayılınca"],["plan","Yeni date planlanınca"],["remind","Date yaklaşınca","1 gün ve 2 saat önce"],["note","Sana not bırakınca","Fotoğraflı notlar dahil"],["photo","Albüme fotoğraf eklenince"],["other","Anı, yeni fikir ve tamamlanan date"]];
+const PREF_DEF={love:true,match:true,plan:true,remind:true,note:true,photo:true,other:true};
+function getPrefs(){try{return Object.assign({},PREF_DEF,JSON.parse(lsGet("bny-prefs")||"{}"))}catch(e){return {...PREF_DEF}}}
 function b64u(s){const p="=".repeat((4-s.length%4)%4),b=atob((s+p).replace(/-/g,"+").replace(/_/g,"/"));return Uint8Array.from(b,c=>c.charCodeAt(0))}
 async function initSW(){
   if(!("serviceWorker" in navigator))return;
@@ -1178,7 +1215,9 @@ function introSlides(){
       <div><b>🎲 Şansımıza bırak</b>Kararsız kalınca çark sizin yerinize seçer</div>
       <div><b>📅 Planlar</b>Tarih ve saat seçin, Google veya Outlook takvimine ekleyin</div>
       <div><b>📖 Albüm</b>Yapılan date'lere fotoğraf ve anı ekleyin, sayfa sayfa gezin</div>
-      <div><b>🔔 Bildirimler</b>Kalp, eşleşme, yeni plan ve yaklaşan date için haber</div>
+      <div><b>💌 Notlar</b>Birbirinize fotoğraflı küçük notlar bırakın</div>
+      <div><b>⏰ Saat filtresi</b>Sadece buluşabildiğiniz saatlere uyan fikirler</div>
+      <div><b>🔔 Bildirimler</b>Kalp, eşleşme, plan, not, fotoğraf ve yaklaşan date için haber</div>
      </div>`,
     installSlide(),
     `<div class="badge">${ICO.key}</div><h3>Nasıl başlarız?</h3>

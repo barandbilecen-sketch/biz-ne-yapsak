@@ -7,7 +7,13 @@
 <meta name="description" content="Sevgililer için ortak date planlayıcı: şehir seç, fikirlere kalp at, eşleşmeleri gör, takvime ekle.">
 <meta property="og:title" content="Biz Ne Yapsak?">
 <meta property="og:description" content="Birlikte ne yapsak? Date fikirleri, eşleşmeler ve ortak takvim.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9E%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Biz Ne Yapsak">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Biz Ne Yapsak?</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
@@ -38,6 +44,15 @@ body{margin:0}
 [hidden]{display:none!important}
 img{max-width:100%}
 button.duo{background:none;border:0;padding:0;cursor:pointer}
+.hdr-r{display:flex;align-items:center;gap:10px}
+.bell{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--line);background:var(--surface);display:grid;place-items:center;color:var(--ink);position:relative;padding:0}
+.bell svg{width:19px;height:19px}
+.bell.on{color:var(--cherry);border-color:var(--cherry)}
+.bell .bd{position:absolute;top:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:var(--mint);border:2px solid var(--bg)}
+.tg{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-weight:600}
+.tg small{display:block;color:var(--muted);font-weight:400;font-size:13px}
+.tg input{width:22px;height:22px;accent-color:var(--cherry);flex:0 0 auto}
+.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
 .code{font-family:ui-monospace,Menlo,monospace;font-size:26px;letter-spacing:.18em;font-weight:800;text-align:center;background:var(--sunk);border-radius:14px;padding:14px;user-select:all}
 .or{text-align:center;color:var(--muted);font-size:13px;font-weight:700}
 html,body{background:var(--bg)}
@@ -187,7 +202,7 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);background:var(--mi
   <header class="top">
     <div class="brand">
       <h1>Biz Ne Yapsak?<small id="cityLabel">İstanbul'da date fikirleri</small></h1>
-      <button class="duo" id="duo" data-room="1" aria-label="Oda ve davet"></button>
+      <div class="hdr-r"><button class="bell" id="bell" data-notif="1" aria-label="Bildirimler"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg></button><button class="duo" id="duo" data-room="1" aria-label="Oda ve davet"></button></div>
     </div>
     <div class="cities" id="cities" role="group" aria-label="Şehir seç"></div>
   </header>
@@ -218,6 +233,7 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);background:var(--mi
    FIREBASE AYARI — Firebase konsolundan aldığın config'i
    aşağıya yapıştır. null kalırsa uygulama sadece o cihazda çalışır.
    ========================================================= */
+const VAPID_PUBLIC_KEY = "BLfZfM7-ryFNKb6vVEHR3l5ZgJvrl1VgNoAd1Vd6pG2U0C2men8-hCe650kKTmdLyzJghwXgEn3FXQxlPfP11k4";
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyCDsDxiEi6HMVYTl-lzG-GJMdd2tcxb4Pk",
   authDomain: "biz-ne-yapsak.firebaseapp.com",
@@ -441,7 +457,9 @@ async function setVote(idea,v){
   if(nv)S.votes[key]={uid:myId,idea,v:nv,ts:Date.now()};else delete S.votes[key];
   render();
   if(shared){try{const r=db.collection("votes").doc(key);nv?await r.set(S.votes[key]):await r.delete()}catch(e){denied(e)}}else saveLocal();
-  if(nv==="love"){const pv=partnerVote(idea);if(pv==="love")toast("Eşleşme! İkiniz de bayıldınız 💞")}
+  const it=ideaById(idea),tt=it?it.t:"";
+  if(nv==="love"){const pv=partnerVote(idea);if(pv==="love"){toast("Eşleşme! İkiniz de bayıldınız 💞");notify("match",{title:tt})}else queueLove(tt)}
+  else unqueueLove(tt);
 }
 function newId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 async function addDoc(col,data){
@@ -531,6 +549,7 @@ function banners(){
   if(/WhatsApp|Instagram|FBAN|FBAV/i.test(navigator.userAgent))h+=`<div class="banner"><b>Uygulama içi tarayıcıdasın.</b> En sorunsuz kullanım için ••• menüsünden <b>Safari'de / Tarayıcıda aç</b>.</div>`;
   if(!FIREBASE_CONFIG)h+=`<div class="banner"><b>Şu an sadece bu cihazda kaydediliyor.</b> Ortak kullanım için index.html içine Firebase ayarını eklemek gerekiyor.</div>`;
   else if(!shared)h+=`<div class="banner">Bağlanılıyor...</div>`;
+  else if(partnerId()&&!pushOn&&!lsGet("bny-nudge"))h+=`<div class="banner"><b>Bildirimleri aç:</b> sevgilin bir şeye bayılınca ya da date yaklaşınca haberin olsun. <button class="btn soft sm" data-notif="1" style="margin-top:8px">Aç</button></div>`;
   else if(!partnerId())h+=`<div class="banner"><b>Oda kodun: ${esc(room)}</b><br>Sevgilin henüz bu odada değil. Davet linkini gönder; o açınca ekranında da aynı kod görünmeli. <button class="btn soft sm" data-room="1" style="margin-top:8px">Davet linki</button></div>`;
   return h;
 }
@@ -668,8 +687,8 @@ function planSheet(ideaId,editId){
         const data={title:$("#pTitle").value.trim(),date:$("#pDate").value,time:$("#pTime").value,place:$("#pPlace").value.trim(),dur:+$("#pDur").value,note:$("#pNote").value.trim()};
         if(!data.title)return toast("Ne yapacağınızı yazın.");if(!data.date)return toast("Bir tarih seçin.");
         closeSheet();
-        if(ed){await patchDoc("plans",ed.id,data);toast("Plan güncellendi.")}
-        else{await addDoc("plans",{...data,idea:i?i.id:"",city:i?i.city:ui.city,done:false,rating:0,memory:""});if(!readOnly){toast("Planlandı! Takvim butonlarıyla telefonuna da ekle.");ui.tab="planlar";saveUI();render()}}
+        if(ed){await patchDoc("plans",ed.id,{...data,n24:false,n2:false});toast("Plan güncellendi.")}
+        else{await addDoc("plans",{...data,idea:i?i.id:"",city:i?i.city:ui.city,done:false,rating:0,memory:""});if(!readOnly){notify("plan",{title:data.title,date:data.date,time:data.time});toast("Planlandı! Sevgiline de haber verdik.");ui.tab="planlar";saveUI();render()}}
       };
     });
 }
@@ -737,6 +756,7 @@ document.addEventListener("click",e=>{
   if(t.dataset.memo){memoSheet(t.dataset.memo);return}
   if(t.dataset.delnote){delDoc("notes",t.dataset.delnote);return}
   if(t.dataset.room){roomSheet();return}
+  if(t.dataset.notif){notifSheet();return}
   if(t.id==="spinBtn"||t.id==="spinBtn2"){spinSheet();return}
   if(t.id==="addIdeaBtn"){ideaSheet();return}
   if(t.id==="noteBtn"){const v=$("#noteIn").value.trim();if(!v)return toast("Önce bir şey yaz.");addDoc("notes",{text:v});return}
@@ -785,7 +805,7 @@ async function joinRoom(code,isNew){
   unsubs.push(base.collection("members").onSnapshot(s=>{members=s.docs.map(x=>x.id);s.docs.forEach(x=>{people[x.id]={name:x.data().name||"",avatarUrl:""}});render()},err));
   unsubs.push(db.collection("votes").onSnapshot(s=>{const m={};s.docs.forEach(x=>{const v=x.data();if(v&&v.uid&&v.idea&&v.v)m[x.id]=v});S.votes=m;render()},err));
   ["plans","ideas","notes"].forEach(col=>unsubs.push(db.collection(col).onSnapshot(s=>{S[col]=s.docs.map(x=>({id:x.id,...x.data()}));render()},err)));
-  render();
+  render();initSW();
 }
 
 function roomSheet(){
@@ -805,6 +825,77 @@ function roomSheet(){
     s.querySelector("#rSave").onclick=async()=>{const n=$("#rName").value.trim();if(!n)return;lsSet("bny-name",n);try{await db.collection("members").doc(myId).set({name:n,ts:Date.now()})}catch(e){denied(e)}closeSheet();toast("Adın güncellendi.")};
     s.querySelector("#rLeave").onclick=e=>{const b=e.currentTarget;if(!b.dataset.sure){b.dataset.sure="1";b.textContent="Emin misin?";return}
       unsubs.forEach(u=>u());unsubs=[];shared=false;room=null;lsSet("bny-room-v2",null);history.replaceState(null,"",location.pathname);closeSheet();loadLocal();render();onboard()};
+  });
+}
+
+/* ------------------ BİLDİRİMLER ------------------ */
+const UA=navigator.userAgent;
+const isIOS=/iPhone|iPad|iPod/.test(UA)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+const isStandalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+const pushSupported="serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window;
+let swReg=null,pushOn=false;
+const PREF_KEYS=[["love","Sevgilin bir fikre bayılınca"],["match","Eşleşme olunca","İkiniz de aynı fikre bayılınca"],["plan","Yeni date planlanınca"],["remind","Date yaklaşınca","1 gün ve 2 saat önce"]];
+function getPrefs(){try{return Object.assign({love:true,match:true,plan:true,remind:true},JSON.parse(lsGet("bny-prefs")||"{}"))}catch(e){return {love:true,match:true,plan:true,remind:true}}}
+function b64u(s){const p="=".repeat((4-s.length%4)%4),b=atob((s+p).replace(/-/g,"+").replace(/_/g,"/"));return Uint8Array.from(b,c=>c.charCodeAt(0))}
+async function initSW(){
+  if(!("serviceWorker" in navigator))return;
+  try{swReg=await navigator.serviceWorker.register("/sw.js");const sub=pushSupported?await swReg.pushManager.getSubscription():null;pushOn=!!sub&&Notification.permission==="granted";updateBell();if(pushOn&&shared)saveSub(sub)}catch(e){console.warn(e)}
+}
+function updateBell(){const b=$("#bell");if(!b)return;b.classList.toggle("on",pushOn);b.innerHTML=b.innerHTML.replace(/<span class="bd"><\/span>/,"")+(pushOn?'<span class="bd"></span>':"")}
+function pushRef(){return fs.collection("rooms").doc(room).collection("push").doc(myId)}
+async function saveSub(sub){if(!shared||!fs||!room)return;try{await pushRef().set({subs:firebase.firestore.FieldValue.arrayUnion(JSON.parse(JSON.stringify(sub))),prefs:getPrefs(),ts:Date.now()},{merge:true})}catch(e){console.warn(e)}}
+async function enablePush(){
+  if(!shared)return toast("Önce bir odaya katılmalısın.");
+  try{
+    const perm=await Notification.requestPermission();
+    if(perm!=="granted"){toast("Bildirim izni verilmedi.");notifSheet();return}
+    swReg=swReg||await navigator.serviceWorker.register("/sw.js");await navigator.serviceWorker.ready;
+    let sub=await swReg.pushManager.getSubscription();
+    if(!sub)sub=await swReg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUBLIC_KEY)});
+    await saveSub(sub);pushOn=true;updateBell();
+    notify("test",{},true);toast("Bildirimler açıldı! Birazdan bir test bildirimi gelecek.");notifSheet();
+  }catch(e){console.error(e);toast("Bildirimler açılamadı: "+(e.message||"bilinmeyen hata"))}
+}
+async function disablePush(){
+  try{const sub=swReg&&await swReg.pushManager.getSubscription();if(sub){await pushRef().set({subs:firebase.firestore.FieldValue.arrayRemove(JSON.parse(JSON.stringify(sub)))},{merge:true}).catch(()=>{});await sub.unsubscribe()}}catch(e){}
+  pushOn=false;updateBell();toast("Bu cihazda bildirimler kapatıldı.");notifSheet();
+}
+async function notify(type,data,self){
+  if(!shared||!room||!window.firebase)return;
+  if(!self&&!partnerId())return;
+  try{const u=firebase.auth().currentUser;if(!u)return;const tok=await u.getIdToken();
+    fetch("/.netlify/functions/notify",{method:"POST",keepalive:true,headers:{"content-type":"application/json",authorization:"Bearer "+tok},body:JSON.stringify({room,type,...data})}).catch(()=>{})}catch(e){}
+}
+let loveBuf=[],loveT=null;
+function queueLove(t){if(!t)return;if(!loveBuf.includes(t))loveBuf.push(t);clearTimeout(loveT);loveT=setTimeout(flushLove,40000)}
+function unqueueLove(t){loveBuf=loveBuf.filter(x=>x!==t)}
+function flushLove(){clearTimeout(loveT);if(!loveBuf.length)return;const items=loveBuf.slice(0,5);loveBuf=[];notify("love",{items})}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")flushLove()});
+
+function notifSheet(){
+  let body="";
+  if(!pushSupported&&isIOS&&!isStandalone){
+    body=`<p class="sub" style="margin:0">iPhone'da bildirim alabilmek için uygulamayı ana ekrana eklemen gerekiyor (iOS 16.4 ve üstü):</p>
+    <ol class="steps"><li>Safari'de alttaki <b>Paylaş</b> düğmesine dokun.</li><li><b>Ana Ekrana Ekle</b>'yi seç.</li><li>Ana ekrandaki <b>Biz Ne Yapsak</b> simgesinden aç.</li><li>Adını yazıp aynı oda koduyla katıl: <b>${esc(room||"")}</b></li><li>Bu zile tekrar dokunup bildirimleri aç.</li></ol>`;
+  }else if(!pushSupported){
+    body=`<p class="sub" style="margin:0">Bu tarayıcı bildirimleri desteklemiyor. Android'de Chrome, iPhone'da ana ekrana eklenmiş uygulamayı kullan.</p>`;
+  }else if(Notification.permission==="denied"){
+    body=`<p class="sub" style="margin:0">Bildirim izni bu cihazda engellenmiş. Telefonun <b>Ayarlar → Bildirimler</b> bölümünden ${isIOS?"<b>Biz Ne Yapsak</b>":"tarayıcın"} için izin verip sayfayı yenile.</p>`;
+  }else if(!pushOn){
+    body=`<p class="sub" style="margin:0">Sevgilin bir fikre bayılınca, date planlayınca ve date yaklaşınca telefonuna haber gelsin.</p>
+    <button class="btn cherry" id="nOn">Bildirimleri aç</button>`;
+  }else{
+    const pr=getPrefs();
+    body=`<p class="sub" style="margin:0">Bu cihazda bildirimler açık. Neler için haber almak istediğini seç:</p>
+    <div>${PREF_KEYS.map(([k,n,sm])=>`<label class="tg"><span>${n}${sm?`<small>${sm}</small>`:""}</span><input type="checkbox" data-pref="${k}" ${pr[k]?"checked":""}></label>`).join("")}</div>
+    <div class="actions"><button class="btn soft" id="nTest">Test bildirimi</button><button class="btn line" id="nOff">Bu cihazda kapat</button></div>`;
+  }
+  sheet(`<h3>Bildirimler</h3>${body}<button class="btn line sm" id="nX">Kapat</button>`,s=>{
+    s.querySelector("#nX").onclick=closeSheet;
+    const on=s.querySelector("#nOn");if(on)on.onclick=enablePush;
+    const off=s.querySelector("#nOff");if(off)off.onclick=disablePush;
+    const ts=s.querySelector("#nTest");if(ts)ts.onclick=()=>{notify("test",{},true);toast("Test bildirimi gönderildi.")};
+    s.querySelectorAll("[data-pref]").forEach(c=>c.onchange=async()=>{const pr=getPrefs();pr[c.dataset.pref]=c.checked;lsSet("bny-prefs",JSON.stringify(pr));try{await pushRef().set({prefs:pr},{merge:true})}catch(e){denied(e)}});
   });
 }
 

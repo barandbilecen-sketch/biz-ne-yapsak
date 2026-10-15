@@ -247,6 +247,26 @@ nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);background:var(--mi
 .lb img{max-width:100%;max-height:72vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
 .lb .row{justify-content:center}
 .lb .meta{color:#E9D6DE;font-size:13px;text-align:center}
+/* ---- tanıtım ---- */
+.intro{display:flex;flex-direction:column;gap:14px;min-height:min(560px,78vh)}
+.intro .slide{flex:1;display:flex;flex-direction:column;gap:12px;animation:fadeUp .3s ease-out}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.intro .badge{width:64px;height:64px;border-radius:20px;background:var(--cherry);color:var(--cherry-ink);display:grid;place-items:center}
+.intro .badge svg{width:34px;height:34px}
+.intro h3{font-size:28px}
+.intro p{margin:0;color:var(--muted);font-size:15px}
+.feat{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.feat div{background:var(--sunk);border-radius:14px;padding:10px 12px;font-size:13px;color:var(--muted)}
+.feat b{display:block;color:var(--ink);font-size:14px;margin-bottom:2px}
+.istep{display:flex;gap:12px;align-items:flex-start;background:var(--sunk);border-radius:14px;padding:12px}
+.istep .n{flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-weight:800;font-size:14px}
+.istep span{font-size:14.5px}
+.istep svg{width:18px;height:18px;vertical-align:-3px;color:var(--cherry)}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots i{width:7px;height:7px;border-radius:4px;background:var(--line);transition:width .2s}
+.dots i.on{width:22px;background:var(--cherry)}
+.warn{background:var(--butter-soft);border-radius:12px;padding:10px 12px;font-size:13.5px}
+@media (prefers-reduced-motion:reduce){.intro .slide{animation:none}}
 @media (prefers-reduced-motion:reduce){.pg.out-next,.pg.in-next,.pg.out-prev,.pg.in-prev{animation:none}}
 @media (prefers-reduced-motion:reduce){.sheet{animation:none}.wheel.spin .t{animation:none}}
 @media (max-width:380px){.grid2{grid-template-columns:1fr}.card h3{font-size:18px}}
@@ -880,7 +900,9 @@ function roomSheet(){
   <div class="field"><label for="rLink">Davet linki</label><input id="rLink" readonly value="${esc(roomLink())}"></div>
   <div class="actions"><button class="btn cherry" id="rCopy">Linki kopyala</button>${canShare?'<button class="btn primary" id="rShare">Paylaş</button>':'<button class="btn line" id="rX">Kapat</button>'}</div>
   <div class="field"><label for="rName">Adın</label><input id="rName" maxlength="24" value="${esc(lsGet("bny-name")||"")}"></div>
-  <div class="actions"><button class="btn soft" id="rSave">Adı kaydet</button><button class="btn line" id="rLeave">Odadan çık</button></div>`,s=>{
+  <div class="actions"><button class="btn soft" id="rSave">Adı kaydet</button><button class="btn line" id="rLeave">Odadan çık</button></div>
+  <button class="btn soft sm" id="rGuide">📘 Kullanım rehberi</button>`,s=>{
+    s.querySelector("#rGuide").onclick=()=>{closeSheet();showIntro()};
     s.querySelector("#rCopy").onclick=async()=>{try{await navigator.clipboard.writeText(roomLink());toast("Link kopyalandı.")}catch(e){const i=$("#rLink");i.focus();i.select();toast("Linki seçtim, kopyalayabilirsin.")}};
     const sh=s.querySelector("#rShare");if(sh)sh.onclick=()=>navigator.share({title:"Biz Ne Yapsak?",text:"Date planlarımız için odama gel 💞",url:roomLink()}).catch(()=>{});
     const x=s.querySelector("#rX");if(x)x.onclick=closeSheet;
@@ -1101,6 +1123,92 @@ function notifSheet(){
   });
 }
 
+/* ------------------ TANITIM REHBERİ ------------------ */
+const INTRO_KEY="bny-intro-v1";
+let installEvt=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e});
+const isAndroid=/Android/i.test(navigator.userAgent);
+const inApp=/WhatsApp|Instagram|FBAN|FBAV|Line\//i.test(navigator.userAgent);
+const ICO={
+  heart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>',
+  star:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.6 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg>',
+  phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M11 18h2"/></svg>',
+  key:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3M15 8l2 2"/></svg>',
+  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg>',
+  dots:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>'
+};
+function installSlide(){
+  if(isStandalone)return null;
+  let steps="";
+  if(inApp){
+    return `<div class="badge">${ICO.phone}</div><h3>Önce tarayıcıda aç</h3>
+    <p>Şu an WhatsApp ya da Instagram'ın içindeki tarayıcıdasın. Burada kayıt ve bildirimler düzgün çalışmayabilir.</p>
+    <div class="istep"><span class="n">1</span><span>Sağ üstteki ya da alttaki ${ICO.dots} menüsüne dokun.</span></div>
+    <div class="istep"><span class="n">2</span><span><b>${isIOS?"Safari'de Aç":"Tarayıcıda aç"}</b>'ı seç.</span></div>
+    <div class="istep"><span class="n">3</span><span>Açılan sayfada bu rehber tekrar çıkar, ana ekrana eklemeyi orada anlatıyorum.</span></div>`;
+  }
+  if(isIOS){
+    steps=`<div class="istep"><span class="n">1</span><span>Safari'de alttaki <b>Paylaş</b> ${ICO.share} düğmesine dokun.</span></div>
+    <div class="istep"><span class="n">2</span><span>Listeyi biraz aşağı kaydırıp <b>Ana Ekrana Ekle</b> ${ICO.plus}'yi seç, sonra <b>Ekle</b> de.</span></div>
+    <div class="istep"><span class="n">3</span><span>Ana ekranda çıkan <b>Biz Ne Yapsak</b> simgesinden aç. Bildirimler sadece böyle açılınca çalışır.</span></div>
+    <div class="warn">Ana ekrandan ilk açtığında adını yazıp aynı oda koduyla bir kez daha katılman gerekecek. Hiçbir şey kaybolmaz.</div>`;
+  }else if(isAndroid){
+    steps=installEvt?`<button class="btn cherry" id="doInstall">📲 Ana ekrana yükle</button>
+    <p>Tek dokunuşla telefonuna uygulama gibi yüklenir.</p>`
+    :`<div class="istep"><span class="n">1</span><span>Chrome'da sağ üstteki ${ICO.dots} menüsüne dokun.</span></div>
+    <div class="istep"><span class="n">2</span><span><b>Ana ekrana ekle</b> ya da <b>Uygulamayı yükle</b>'yi seç.</span></div>
+    <div class="istep"><span class="n">3</span><span>Ana ekrandaki simgeden aç, uygulama gibi tam ekran çalışır.</span></div>`;
+  }else{
+    steps=installEvt?`<button class="btn cherry" id="doInstall">💻 Bilgisayara yükle</button>`:
+    `<p>En güzel deneyim telefonda. Bu sayfayı telefonunda açıp ana ekrana eklemeni öneririm. Bilgisayarda da sorunsuz çalışır.</p>`;
+  }
+  return `<div class="badge">${ICO.phone}</div><h3>Ana ekrana ekle</h3>
+  <p>Böylece uygulama gibi tek dokunuşla açılır, tam ekran çalışır ve telefonuna bildirim gelebilir.</p>${steps}`;
+}
+function introSlides(){
+  const sl=[
+    `<div class="badge">${ICO.heart}</div><h3>Hoş geldiniz 💞</h3>
+     <p><b style="color:var(--ink)">Biz Ne Yapsak?</b> "bugün ne yapsak" diye tıkandığınızda ikinizin birlikte karar vermesi için yapıldı.</p>
+     <p>Şehrinizi seçin, fikirlere kalp atın. İkinizin de kalp attığı fikirler eşleşir, takvime koyar, yaptıktan sonra fotoğraflarla albüme eklersiniz.</p>`,
+    `<div class="badge">${ICO.star}</div><h3>Neler var?</h3>
+     <div class="feat">
+      <div><b>🧭 Keşfet</b>8 şehirde 120'den fazla date fikri; kategori, bütçe ve saat filtresi</div>
+      <div><b>💞 Eşleşme</b>İkinizin de bayıldığı fikirler burada toplanır</div>
+      <div><b>🎲 Şansımıza bırak</b>Kararsız kalınca çark sizin yerinize seçer</div>
+      <div><b>📅 Planlar</b>Tarih ve saat seçin, Google veya Outlook takvimine ekleyin</div>
+      <div><b>📖 Albüm</b>Yapılan date'lere fotoğraf ve anı ekleyin, sayfa sayfa gezin</div>
+      <div><b>🔔 Bildirimler</b>Kalp, eşleşme, yeni plan ve yaklaşan date için haber</div>
+     </div>`,
+    installSlide(),
+    `<div class="badge">${ICO.key}</div><h3>Nasıl başlarız?</h3>
+     <div class="istep"><span class="n">1</span><span>Biriniz adını yazıp <b>Yeni oda kur</b> desin.</span></div>
+     <div class="istep"><span class="n">2</span><span>Sağ üstteki kalp simgesinden <b>davet linkini</b> kopyalayıp sevgiline gönder.</span></div>
+     <div class="istep"><span class="n">3</span><span>O linki açıp adını yazınca aynı odadasınız. Artık her şey ikinizde anında görünür.</span></div>
+     <div class="istep"><span class="n">4</span><span>Sağ üstteki 🔔 ile bildirimleri açmayı unutmayın.</span></div>`
+  ];
+  return sl.filter(Boolean);
+}
+function showIntro(done){
+  const sl=introSlides();let i=0;
+  const draw=()=>{
+    const last=i===sl.length-1;
+    sheet(`<div class="intro"><div class="slide">${sl[i]}</div>
+      <div class="dots">${sl.map((_,k)=>`<i class="${k===i?"on":""}"></i>`).join("")}</div>
+      <div class="actions"><button class="btn line" id="inSkip">${i===0?"Geç":"Geri"}</button><button class="btn cherry" id="inNext">${last?"Başlayalım 💞":"İleri"}</button></div></div>`,s=>{
+      const fin=()=>{lsSet(INTRO_KEY,"1");closeSheet();done&&done()};
+      s.querySelector("#inNext").onclick=()=>{if(last)fin();else{i++;draw()}};
+      s.querySelector("#inSkip").onclick=()=>{if(i===0)fin();else{i--;draw()}};
+      const ins=s.querySelector("#doInstall");
+      if(ins)ins.onclick=async()=>{try{installEvt.prompt();const r=await installEvt.userChoice;installEvt=null;if(r&&r.outcome==="accepted")toast("Yüklendi! Ana ekrandaki simgeden açabilirsin.");draw()}catch(e){}};
+      let sx=null;const el=s.querySelector(".intro");
+      el.addEventListener("touchstart",e=>{sx=e.touches[0].clientX},{passive:true});
+      el.addEventListener("touchend",e=>{if(sx==null)return;const dx=e.changedTouches[0].clientX-sx;sx=null;if(dx<-50&&!last){i++;draw()}else if(dx>50&&i>0){i--;draw()}});
+    },true);
+  };
+  draw();
+}
+
 /* ------------------ BAŞLAT ------------------ */
 loadLocal();render();
 (async()=>{
@@ -1116,10 +1224,13 @@ loadLocal();render();
     await u.getIdToken(true); // Firestore'a gitmeden önce oturum belgesinin hazır olduğundan emin ol
     myId=u.uid;
   }catch(e){console.error(e);toast("Firebase'e bağlanılamadı. Anonim girişin açık olduğunu kontrol et.");return}
-  const hashCode=cleanCode(location.hash.slice(1)),saved=lsGet("bny-room-v2"),name=lsGet("bny-name");
-  if(hashCode&&hashCode!==saved){onboard();return}
-  if(saved&&name){joinRoom(saved);return}
-  onboard();
+  const go=()=>{
+    const hashCode=cleanCode(location.hash.slice(1)),saved=lsGet("bny-room-v2"),name=lsGet("bny-name");
+    if(hashCode&&hashCode!==saved){onboard();return}
+    if(saved&&name){joinRoom(saved);return}
+    onboard();
+  };
+  if(!lsGet(INTRO_KEY))showIntro(go);else go();
 })();
 window.addEventListener("hashchange",()=>{const c=cleanCode(location.hash.slice(1));if(fs&&c&&c!==room)onboard()});
 </script>

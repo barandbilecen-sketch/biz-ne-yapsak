@@ -43,6 +43,29 @@ export default async (req) => {
       }
       msg = { title: `${name} bir date planladı 📅`, body: t + when, tag: "plan" };
       pref = "plan";
+    } else if (b.type === "note") {
+      const t = clip(b.text, 120);
+      const n = Math.max(0, Math.min(4, +b.photos || 0));
+      msg = {
+        title: `${name} sana bir not bıraktı 💌`,
+        body: t ? (n ? `📷 ${t}` : t) : (n > 1 ? `${n} fotoğraf gönderdi` : "Bir fotoğraf gönderdi"),
+        tag: "note-" + Date.now()
+      };
+      pref = "note";
+    } else if (b.type === "photo") {
+      const t = clip(b.title, 60);
+      const n = Math.max(1, Math.min(12, +b.count || 1));
+      msg = { title: `${name} ${n > 1 ? n + " fotoğraf" : "bir fotoğraf"} ekledi 📸`, body: t ? `"${t}" sayfası albümde seni bekliyor` : "Albüme göz at", tag: "photo-" + Date.now() };
+      pref = "photo";
+    } else if (b.type === "memory") {
+      msg = { title: `${name} bir anı yazdı ✍️`, body: `${clip(b.title, 50)}: “${clip(b.text, 100)}”`, tag: "memory-" + Date.now() };
+      pref = "other";
+    } else if (b.type === "done") {
+      msg = { title: `"${clip(b.title, 50)}" tamamlandı 🎉`, body: `${name} işaretledi. Yıldız verip fotoğraf eklemeyi unutmayın!`, tag: "done" };
+      pref = "other";
+    } else if (b.type === "idea") {
+      msg = { title: `${name} yeni bir fikir ekledi 💡`, body: clip(b.title, 80), tag: "idea" };
+      pref = "other";
     } else if (b.type === "test") {
       msg = { title: "Bildirimler açık 🎉", body: "Artık planlar, beğeniler ve yaklaşan date'ler için haber alacaksın.", tag: "test" };
       const sent = await sendToRoom(room, msg, { only: uid });

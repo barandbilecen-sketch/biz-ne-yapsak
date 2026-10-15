@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#E2365B">
+<meta name="description" content="Sevgililer için ortak date planlayıcı: şehir seç, fikirlere kalp at, eşleşmeleri gör, takvime ekle.">
+<meta property="og:title" content="Biz Ne Yapsak?">
+<meta property="og:description" content="Birlikte ne yapsak? Date fikirleri, eşleşmeler ve ortak takvim.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9E%3C/text%3E%3C/svg%3E">
+<title>Biz Ne Yapsak?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
+<style>
+/* Layout: tek sütun telefon uygulaması, yapışkan başlık + alt sekme çubuğu; kartlar fikir "biletleri" gibi */
+:root{
+  --bg:#FBF2F5; --surface:#FFFFFF; --sunk:#F4E6EC; --ink:#2B1630; --muted:#7A5F80; --line:#EAD5DE;
+  --cherry:#E2365B; --cherry-ink:#FFFFFF; --cherry-soft:#FCDDE4;
+  --mint:#21907A; --mint-soft:#D8F2EA; --butter:#F6B93B; --butter-soft:#FDF0D2;
+  --plum:#5B3A7A;
+  --display:"Caprasimo","Cooper Black",Georgia,serif;
+  --body:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:18px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1A1120; --surface:#251A2C; --sunk:#2F2237; --ink:#F7E8F0; --muted:#B89FBF; --line:#3D2D46;
+  --cherry:#FF5C80; --cherry-ink:#2A0B14; --cherry-soft:#4A1E2E;
+  --mint:#4FD1B1; --mint-soft:#183A33; --butter:#FFC95C; --butter-soft:#3E3018; --plum:#C9A5EE;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1A1120; --surface:#251A2C; --sunk:#2F2237; --ink:#F7E8F0; --muted:#B89FBF; --line:#3D2D46;
+  --cherry:#FF5C80; --cherry-ink:#2A0B14; --cherry-soft:#4A1E2E;
+  --mint:#4FD1B1; --mint-soft:#183A33; --butter:#FFC95C; --butter-soft:#3E3018; --plum:#C9A5EE;
+  color-scheme:dark}
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+button.duo{background:none;border:0;padding:0;cursor:pointer}
+.code{font-family:ui-monospace,Menlo,monospace;font-size:26px;letter-spacing:.18em;font-weight:800;text-align:center;background:var(--sunk);border-radius:14px;padding:14px;user-select:all}
+.or{text-align:center;color:var(--muted);font-size:13px;font-weight:700}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2.5px solid var(--cherry);outline-offset:2px;border-radius:10px}
+.wrap{max-width:600px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 110px}
+
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding-block:12px 10px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:400;font-size:28px;line-height:1;margin:0;letter-spacing:.2px;color:var(--cherry)}
+h1 small{display:block;font-family:var(--body);font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-top:4px}
+.duo{display:flex;align-items:center}
+.duo img{width:32px;height:32px;border-radius:50%;border:2.5px solid var(--bg);object-fit:cover;background:var(--sunk)}
+.duo img+img{margin-left:-10px}
+.duo .heart{margin:0 -4px;z-index:2;color:var(--cherry);font-size:15px;position:relative}
+.duo .ghost{width:32px;height:32px;border-radius:50%;border:2px dashed var(--muted);display:grid;place-items:center;color:var(--muted);font-size:16px;margin-left:-6px;background:var(--bg)}
+
+.cities{display:flex;gap:8px;overflow-x:auto;padding:12px 2px 2px;scrollbar-width:none;margin:0 -2px}
+.cities::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-weight:600;font-size:14px;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip.sm{padding:5px 11px;font-size:13px}
+
+main section{display:flex;flex-direction:column;gap:14px;padding-top:16px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filters{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.filters::-webkit-scrollbar{display:none}
+
+.next{display:flex;gap:14px;align-items:center;background:var(--cherry);color:var(--cherry-ink);border-radius:var(--r);padding:14px 16px}
+.next .big{font-family:var(--display);font-size:34px;line-height:1;font-variant-numeric:tabular-nums;min-width:52px;text-align:center}
+.next .big small{display:block;font-family:var(--body);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+.next b{display:block;font-size:16px}
+.next span{font-size:13px;opacity:.88}
+
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{border:0;border-radius:14px;padding:12px 14px;font-weight:800;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px}
+.btn.primary{background:var(--ink);color:var(--bg)}
+.btn.cherry{background:var(--cherry);color:var(--cherry-ink)}
+.btn.soft{background:var(--sunk);color:var(--ink)}
+.btn.line{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.btn.sm{min-height:36px;padding:7px 12px;font-size:13.5px;border-radius:11px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+.count{font-size:13px;color:var(--muted);font-weight:600}
+
+.card{background:var(--surface);border-radius:var(--r);padding:16px 16px 12px;border:1px solid var(--line);display:flex;flex-direction:column;gap:10px;position:relative}
+.card.match{border-color:var(--mint);box-shadow:0 0 0 2px var(--mint-soft)}
+.card .kicker{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+.cat{display:inline-flex;align-items:center;gap:6px}
+.cat i{width:9px;height:9px;border-radius:50%;display:inline-block;background:var(--c)}
+.card h3{margin:0;font-size:19px;line-height:1.2;font-weight:800;text-wrap:balance}
+.card p{margin:0;color:var(--muted);font-size:14.5px}
+.meta{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:12.5px;font-weight:600;background:var(--sunk);padding:3px 9px;border-radius:999px;color:var(--ink)}
+.tag.time{background:var(--mint-soft);color:var(--mint)}
+.tag.nofit{background:transparent;border:1px solid var(--line);color:var(--muted)}
+.timebox{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.tb-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tb-head b{font-size:15px}
+.tb-sel{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:8px}
+.tb-sel.off{opacity:.45}
+.tb-dash{padding-bottom:12px;color:var(--muted);font-weight:800}
+.tag.where{background:transparent;border:1px dashed var(--line);color:var(--muted)}
+.perf{border-top:1.5px dashed var(--line);margin:2px -16px 0;position:relative}
+.perf::before,.perf::after{content:"";position:absolute;top:-9px;width:16px;height:16px;border-radius:50%;background:var(--bg);border:1px solid var(--line)}
+.perf::before{left:-8px;clip-path:inset(0 0 0 50%)}
+.perf::after{right:-8px;clip-path:inset(0 50% 0 0)}
+.votes{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.vote{border:1.5px solid var(--line);background:transparent;border-radius:11px;padding:6px 10px;font-weight:700;font-size:13.5px;display:inline-flex;align-items:center;gap:5px;min-height:36px}
+.vote[aria-pressed="true"][data-v="love"]{background:var(--cherry);border-color:var(--cherry);color:var(--cherry-ink)}
+.vote[aria-pressed="true"][data-v="maybe"]{background:var(--butter);border-color:var(--butter);color:#2B1630}
+.vote[aria-pressed="true"][data-v="no"]{background:var(--sunk);border-color:var(--muted)}
+.votes .sp{flex:1}
+.theirs{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);font-weight:600}
+.theirs img{width:20px;height:20px;border-radius:50%}
+.badge-match{background:var(--mint);color:var(--surface);font-size:11px;padding:3px 8px;border-radius:999px;letter-spacing:.06em}
+
+.empty{text-align:center;color:var(--muted);padding:28px 12px;border:1.5px dashed var(--line);border-radius:var(--r)}
+.empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:4px}
+h2{font-family:var(--display);font-weight:400;font-size:24px;margin:6px 0 0;line-height:1.1}
+.sub{color:var(--muted);margin:-6px 0 0;font-size:14px}
+
+.plan{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);display:grid;grid-template-columns:64px 1fr;overflow:hidden}
+.plan .date{background:var(--cherry-soft);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;text-align:center}
+.plan .date .d{font-family:var(--display);font-size:28px;line-height:1;color:var(--cherry);font-variant-numeric:tabular-nums}
+.plan .date .m{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cherry)}
+.plan .date .w{font-size:11px;color:var(--muted);margin-top:2px}
+.plan.past .date{background:var(--sunk)}
+.plan.past .date .d,.plan.past .date .m{color:var(--muted)}
+.plan .body{padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.plan h4{margin:0;font-size:16.5px;line-height:1.25}
+.plan .info{font-size:13px;color:var(--muted)}
+.plan .note{font-size:14px;background:var(--butter-soft);border-radius:10px;padding:8px 10px;overflow-wrap:anywhere}
+.cal{display:flex;gap:6px;flex-wrap:wrap}
+.cal a{font-size:13px;font-weight:700;color:var(--ink);text-decoration:none;border:1.5px solid var(--line);border-radius:10px;padding:6px 10px}
+.stars{display:flex;gap:2px}
+.stars button{background:none;border:0;font-size:22px;padding:0 2px;color:var(--line);line-height:1}
+.stars button.on{color:var(--butter)}
+.memo{font-size:14px;font-style:italic;color:var(--ink);overflow-wrap:anywhere}
+.when-pill{font-size:12px;font-weight:800;color:var(--mint);background:var(--mint-soft);padding:2px 8px;border-radius:999px;align-self:flex-start}
+
+.notes{columns:2 160px;column-gap:10px}
+.note-card{break-inside:avoid;margin-bottom:10px;border-radius:14px;padding:14px 14px 10px;background:var(--c);color:#2B1630;transform:rotate(var(--rot));position:relative}
+.note-card p{margin:0 0 8px;font-size:15px;overflow-wrap:anywhere;white-space:pre-wrap}
+.note-card .by{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;opacity:.75}
+.note-card .x{background:none;border:0;font-size:16px;color:#2B1630;opacity:.6;padding:0 2px}
+
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.field input,.field select,.field textarea{background:var(--sunk);border:1.5px solid transparent;border-radius:12px;padding:11px 12px;width:100%;min-width:0}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--cherry);outline:none}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+nav.tabs .in{max-width:600px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav.tabs button{background:none;border:0;padding:9px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:700;color:var(--muted);position:relative}
+nav.tabs button svg{width:24px;height:24px}
+nav.tabs button[aria-current="page"]{color:var(--cherry)}
+nav.tabs .dot{position:absolute;top:4px;left:calc(50% + 8px);background:var(--mint);color:var(--surface);font-size:10.5px;min-width:18px;height:18px;border-radius:9px;display:grid;place-items:center;padding:0 4px;font-variant-numeric:tabular-nums}
+
+.sheet-bg{position:fixed;inset:0;background:rgba(20,8,24,.5);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:600px;border-radius:22px 22px 0 0;padding:18px max(18px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px;max-height:92vh;overflow-y:auto;animation:up .22s ease-out}
+.sheet h3{font-family:var(--display);font-weight:400;font-size:24px;margin:0;line-height:1.1}
+.sheet .grab{width:40px;height:5px;border-radius:3px;background:var(--line);align-self:center;margin-top:-6px}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+
+.wheel{background:var(--cherry);color:var(--cherry-ink);border-radius:var(--r);padding:26px 18px;text-align:center;min-height:150px;display:flex;flex-direction:column;justify-content:center;gap:6px}
+.wheel .t{font-family:var(--display);font-size:26px;line-height:1.15;text-wrap:balance}
+.wheel .c{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+.wheel.spin .t{animation:flick .09s linear infinite}
+@keyframes flick{50%{opacity:.55}}
+
+.banner{font-size:13.5px;background:var(--butter-soft);border-radius:14px;padding:10px 12px;color:var(--ink)}
+.banner b{font-weight:800}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;font-size:14px;z-index:60;max-width:calc(100% - 32px);text-align:center}
+.seg{display:flex;background:var(--sunk);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:transparent;border-radius:9px;padding:7px 8px;font-weight:700;font-size:13.5px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}.wheel.spin .t{animation:none}}
+@media (max-width:380px){.grid2{grid-template-columns:1fr}.card h3{font-size:18px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Biz Ne Yapsak?<small id="cityLabel">İstanbul'da date fikirleri</small></h1>
+      <button class="duo" id="duo" data-room="1" aria-label="Oda ve davet"></button>
+    </div>
+    <div class="cities" id="cities" role="group" aria-label="Şehir seç"></div>
+  </header>
+
+  <main>
+    <section id="tab-kesfet"></section>
+    <section id="tab-eslesme" hidden></section>
+    <section id="tab-planlar" hidden></section>
+    <section id="tab-notlar" hidden></section>
+  </main>
+</div>
+
+<nav class="tabs" aria-label="Sekmeler"><div class="in">
+  <button data-tab="kesfet" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>Keşfet</button>
+  <button data-tab="eslesme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>Eşleşme<span class="dot" id="matchDot" hidden></span></button>
+  <button data-tab="planlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Planlar</button>
+  <button data-tab="notlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v12l-4 4H5z"/><path d="M15 20v-4h4M8.5 9h7M8.5 12.5h5"/></svg>Notlar</button>
+</div></nav>
+
+<div id="sheetRoot"></div>
+<div id="toastRoot"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* =========================================================
+   FIREBASE AYARI — Firebase konsolundan aldığın config'i
+   aşağıya yapıştır. null kalırsa uygulama sadece o cihazda çalışır.
+   ========================================================= */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCDsDxiEi6HMVYTl-lzG-GJMdd2tcxb4Pk",
+  authDomain: "biz-ne-yapsak.firebaseapp.com",
+  projectId: "biz-ne-yapsak",
+  storageBucket: "biz-ne-yapsak.firebasestorage.app",
+  messagingSenderId: "991546586959",
+  appId: "1:991546586959:web:eb9efe84b2565292b9b73a"
+};
+/* Örnek:
+const FIREBASE_CONFIG = {
+  apiKey: "AIza...",
+  authDomain: "biz-ne-yapsak.firebaseapp.com",
+  projectId: "biz-ne-yapsak",
+  storageBucket: "biz-ne-yapsak.appspot.com",
+  messagingSenderId: "1234567890",
+  appId: "1:1234567890:web:abc123"
+};
+*/
+/* ------------------ FİKİR VERİSİ ------------------ */
+const CATS={
+  romantik:{n:"Romantik",c:"#E2365B"}, doga:{n:"Doğa",c:"#21907A"}, yemek:{n:"Yeme-içme",c:"#F08A24"},
+  kultur:{n:"Kültür",c:"#5B6BD6"}, macera:{n:"Macera",c:"#9B4DCA"}, eglence:{n:"Eğlence",c:"#E0A800"}, evde:{n:"Evde",c:"#6E7F8C"}
+};
+// b: bütçe 1-3, w: g(gündüz) a(akşam) h(her an), p: yer
+const CITY_IDEAS={
+ "İstanbul":[
+  ["Vapurda simit-çay turu","Eminönü'nden Kadıköy'e vapura binin, arka güvertede simit ve çayla martıları besleyin. Dönüşte farklı iskele seçin.","romantik",1,"g","Eminönü – Kadıköy"],
+  ["Moda sahilinde gün batımı","Bir şişe limonata ve dondurmayla Moda sahilindeki çimlere oturup güneşi batırın, sonra Moda'nın ara sokaklarında kaybolun.","romantik",1,"a","Moda, Kadıköy"],
+  ["Kuzguncuk sokak yürüyüşü","Renkli ahşap evler, bostan ve küçük kafeler. Sakin bir pazar sabahı için ideal, sonra sahilde çay.","kultur",1,"g","Kuzguncuk, Üsküdar"],
+  ["Büyükada'da bisiklet","Sabah vapuruyla adaya geçin, bisiklet kiralayıp adayı turlayın, Aya Yorgi yokuşunu birlikte çıkın.","macera",2,"g","Büyükada"],
+  ["Balat fotoğraf avı","Renkli merdivenli sokaklarda birbirinizin fotoğrafını çekin. Kural: her biriniz 10 kare, akşam en iyisini seçin.","kultur",1,"g","Balat, Fatih"],
+  ["Emirgan Korusu pikniği","Battaniye, ev yapımı sandviçler ve bir kart oyunu. Baharda laleler, sonbaharda yaprak renkleri.","doga",1,"g","Emirgan, Sarıyer"],
+  ["Galata'dan Karaköy'e akşam","Galata Kulesi çevresinde yürüyüp Karaköy'de akşam yemeği; Karaköy rıhtımında boğaz manzarasıyla kapanış.","yemek",2,"a","Galata – Karaköy"],
+  ["Pierre Loti'de çay","Eyüp'ten teleferikle tepeye çıkıp Haliç manzarasına karşı çay için.","romantik",1,"g","Eyüp"],
+  ["Ortaköy'de kumpir & köprü","Kumpirinizi alıp camii önünde köprü ışıklarını izleyin.","yemek",1,"a","Ortaköy"],
+  ["İstanbul Modern'de sergi","Güncel sergileri gezip birbirinize favori eserinizi anlatın, sonra müze kafede manzara.","kultur",2,"g","Karaköy"],
+  ["Belgrad Ormanı yürüyüşü","Bent çevresindeki parkurda doğa yürüyüşü, dönüşte Bahçeköy'de kahvaltı.","doga",1,"g","Sarıyer"],
+  ["Çamlıca Tepesi manzarası","Gün batımına doğru çıkın, tüm şehri ışıl ışıl izleyin.","romantik",1,"a","Üsküdar"],
+  ["Bebek'te kahve + Rumelihisarı","Bebek'te kahvenizi alıp sahil boyunca Rumelihisarı'na kadar yürüyün.","doga",2,"g","Bebek"],
+  ["Kadıköy çarşı lezzet turu","Çarşıda her biriniz bir şey ısmarlasın: midye, turşu suyu, tatlı. En iyisine puan verin.","yemek",1,"a","Kadıköy Çarşı"],
+  ["Boğaz tekne turu","Akşamüstü kalkan kısa bir Boğaz turu; köprülerin altından geçerken çay.","romantik",2,"a","Eminönü"],
+  ["Polonezköy kahvaltısı","Şehirden kaçıp köy kahvaltısı ve orman yürüyüşü.","doga",2,"g","Beykoz"],
+  ["Pera Müzesi","Kaplumbağa Terbiyecisi'ni görün, sonra İstiklal'de kitapçı turu.","kultur",2,"g","Beyoğlu"]
+ ],
+ "Ankara":[
+  ["Ankara Kalesi'nde gün batımı","Kaleye çıkıp şehrin üzerine batan güneşi izleyin, Hamamönü'nde kahveyle devam.","romantik",1,"a","Ulus"],
+  ["Hamamönü'nde akşam","Restore edilmiş konakların arasında yürüyüş, menengiç kahvesi ve tatlı.","kultur",1,"a","Altındağ"],
+  ["Eymir Gölü'nde bisiklet","Göl çevresini bisikletle turlayın ya da yürüyün; piknik için harika.","doga",1,"g","ODTÜ, Gölbaşı yolu"],
+  ["Kuğulu Park + Tunalı","Parkta kuğuları izleyin, Tunalı Hilmi'de vitrin gezisi ve akşam yemeği.","yemek",2,"a","Çankaya"],
+  ["CerModern sergisi","Eski cer atölyesinde çağdaş sanat; sonra bahçede kahve.","kultur",1,"g","Altındağ"],
+  ["Gençlik Parkı akşam yürüyüşü","Işıklı havuz çevresinde yürüyüş ve lunapark turu.","eglence",1,"a","Ulus"],
+  ["Erimtan Arkeoloji Müzesi","Kale eteğinde küçük ama etkileyici bir müze; ardından kalede kahvaltı.","kultur",2,"g","Kale"],
+  ["Göksu Parkı'nda tekne","Göl kenarında yürüyüş ve dondurma, sakin bir hafta sonu öğleden sonrası.","doga",1,"g","Etimesgut"],
+  ["Atakule'de şehir manzarası","Seyir terasına çıkıp gece ışıklarını izleyin, ardından Çankaya'da tatlı molası.","romantik",2,"a","Çankaya"],
+  ["Seğmenler Parkı pikniği","Battaniye, termos çay ve kart oyunu; parkın çimlerinde tembel bir pazar.","doga",1,"g","Çankaya"],
+  ["Botanik Parkı yürüyüşü","Göleti ve ahşap köprüleriyle sakin bir yürüyüş, sonbaharda yapraklar harika.","doga",1,"g","Çankaya"],
+  ["Mogan Gölü gün batımı","Gölbaşı'nda göl kenarında yürüyüş, balık ve gün batımı.","romantik",2,"a","Gölbaşı"],
+  ["Beypazarı günü","Tarihi konaklar, serpme kahvaltı, kurutmalar ve havuç lokumu. Bütün güne yayın.","macera",2,"g","Beypazarı"],
+  ["Soğuksu Milli Parkı","Çam ormanında yürüyüş ve mangal; dönüşte Kızılcahamam'da kaplıca.","doga",2,"g","Kızılcahamam"],
+  ["Anadolu Medeniyetleri Müzesi","Hititlerden Frigyalılara binlerce yıllık hikâye; birbirinize en sevdiğiniz parçayı anlatın.","kultur",1,"g","Ulus"],
+  ["Rahmi M. Koç Müzesi","Çengelhan'daki eski arabalar, oyuncaklar ve gemi maketleri; ardından handa kahve.","kultur",2,"g","Çengelhan, Kale"],
+  ["CSO Ada Ankara konseri","Cumhurbaşkanlığı Senfoni Orkestrası'nın salonunda klasik müzik gecesi. Biletleri önceden alın.","kultur",2,"a","Talatpaşa Bulvarı"],
+  ["Devlet Tiyatrosu oyunu","Büyük Tiyatro ya da Şinasi Sahnesi'nde bir oyun, sonra akşam yemeğinde oyunu tartışın.","kultur",1,"a","Ulus / Kızılay"],
+  ["Opera ya da bale gecesi","Ulus'taki Opera Sahnesi'nde şık bir gece; giyinip süslenmek için güzel bir bahane.","romantik",2,"a","Ulus"],
+  ["Samanpazarı antika avı","Bakırcılar ve antikacılar arasında birbirinize 100 ₺'yi geçmeyen bir hediye bulun.","eglence",1,"g","Samanpazarı"],
+  ["Zenger Paşa Konağı'nda yemek","Kale içindeki konakta gözleme ve manzara; Ankara'nın tepeden görünüşü.","yemek",2,"a","Ankara Kalesi"],
+  ["7. Cadde akşamı","Bahçelievler'de kafeler, waffle ve uzun bir cadde yürüyüşü.","yemek",1,"a","Bahçelievler"],
+  ["Sakarya Caddesi atıştırma turu","Kızılay'da her biriniz bir lezzet seçsin; kokoreç, balık ekmek, dondurma.","yemek",1,"a","Kızılay"],
+  ["Atatürk Orman Çiftliği","Geniş yeşil alanda yürüyüş ve çiftliğin ürünleriyle bir mola.","doga",1,"g","Yenimahalle"],
+  ["MTA Tabiat Tarihi Müzesi","Dinozor iskeletleri ve mineraller; çocukluğa dönüş garanti.","eglence",1,"g","Çankaya"],
+  ["Harikalar Diyarı","Masal karakterleriyle dev park; bisiklet ve gölde tekne.","eglence",1,"g","Sincan"],
+  ["Elmadağ'da kayak","Kışın şehre yakın pistlerde kayak ya da kızak, sonra sıcak çikolata.","macera",2,"g","Elmadağ"],
+  ["Gordion antik kenti","Frig başkentinde Midas tümülüsünü görün; tarih meraklıları için yarım günlük kaçamak.","kultur",1,"g","Polatlı"],
+  ["Haymana kaplıcası","Termal suda dinlenme günü; soğuk havalarda birebir.","romantik",2,"g","Haymana"],
+  ["Karagöl'de mangal","Çubuk'taki krater gölü çevresinde orman ve mangal.","doga",1,"g","Çubuk"],
+  ["Dikmen Vadisi akşamı","Vadide yürüyüş ve şehir ışıklarına karşı oturma.","romantik",1,"a","Dikmen"],
+  ["Bilkent'te sinema gecesi","Film seçimini yazı-tura belirlesin, çıkışta film hakkında dürüstçe puan verin.","eglence",2,"a","Bilkent"]
+ ],
+ "İzmir":[
+  ["Kordon'da bisiklet & gün batımı","BİSİM'le Kordon boyunca pedal çevirip gün batımında çimlere oturun.","romantik",1,"a","Alsancak"],
+  ["Kemeraltı kahvaltısı","Boyoz, gevrek ve söğüş; ardından çarşıda kaybolup Kızlarağası Hanı'nda kahve.","yemek",1,"g","Konak"],
+  ["Tarihi Asansör manzarası","Karataş'taki asansörle yukarı çıkıp körfeze karşı yemek yiyin.","romantik",2,"a","Karataş"],
+  ["Vapurla Karşıyaka","Konak'tan vapura binin, Karşıyaka çarşısında yürüyün, dönüşte gün batımı.","eglence",1,"a","Konak – Karşıyaka"],
+  ["Şirince köy günü","Taş evler, köy kahvaltısı ve meyve şarabı tadımı; dönüşte Efes'e uğrayın.","macera",2,"g","Selçuk"],
+  ["Alaçatı sokakları","Begonvilli taş sokaklar, yel değirmenleri ve akşam yemeği.","romantik",3,"a","Çeşme"],
+  ["Urla bağ rotası","Bağ evlerinden birinde kahvaltı ya da tadım; zeytinlikler arasında yürüyüş.","yemek",3,"g","Urla"],
+  ["Ilıca'da deniz günü","Sığ ve berrak suda yüzme, akşam Çeşme kalesi çevresinde dondurma.","doga",2,"g","Çeşme"],
+  ["Kadifekale manzarası","Gün batımında körfezin tamamını tepeden izleyin.","romantik",1,"a","Konak"],
+  ["Bornova'da sokak yemeği","Kumru ve söğüş turu; en iyisine birlikte karar verin.","yemek",1,"a","Bornova"],
+  ["Sığacık'ta balık","Kale içindeki köyde gezinti ve deniz kenarında balık.","yemek",2,"a","Seferihisar"]
+ ],
+ "Antalya":[
+  ["Kaleiçi gece yürüyüşü","Dar sokaklar, Hadrian Kapısı ve limana bakan bir yerde akşam yemeği.","romantik",2,"a","Kaleiçi"],
+  ["Konyaaltı gün batımı","Sahilde yüzme ve dağların arkasına batan güneşi izleme.","doga",1,"a","Konyaaltı"],
+  ["Tünektepe teleferiği","Teleferikle çıkıp tüm körfezi tepeden izleyin.","macera",2,"a","Konyaaltı"],
+  ["Düden Şelalesi pikniği","Şelale çevresinde yürüyüş ve gölgede piknik.","doga",1,"g","Muratpaşa"],
+  ["Tekne turu","Limandan kalkan bir turla koylarda yüzün, öğle yemeği teknede.","macera",2,"g","Kaleiçi Limanı"],
+  ["Karaalioğlu Parkı akşamı","Falezlerin üstünde yürüyüş ve dondurma.","romantik",1,"a","Muratpaşa"],
+  ["Phaselis koyları","Antik kent ve çam ormanı içinde berrak koylarda yüzme.","macera",2,"g","Kemer"]
+ ],
+ "Bursa":[
+  ["Cumalıkızık köy kahvaltısı","Osmanlı köyünde serpme kahvaltı, ardından sokaklarda fotoğraf.","yemek",2,"g","Yıldırım"],
+  ["Gölyazı gün batımı","Göl kenarında yürüyüş, sandal turu ve batan güneş.","romantik",1,"a","Nilüfer"],
+  ["Uludağ günü","Kışın kayak ya da kızak, yazın yürüyüş ve mangal.","macera",3,"g","Uludağ"],
+  ["Koza Han'da çay","Avluda çay, çarşıda ipek eşarp bakmak.","kultur",1,"g","Osmangazi"],
+  ["İskender + kestane şekeri","Bursa klasiği: iskender, sonra tatlı niyetine kestane şekeri.","yemek",2,"a","Merkez"],
+  ["Irgandı Köprüsü yürüyüşü","Çarşılı köprüde küçük dükkânlar ve Tophane'ye yürüyüş.","kultur",1,"g","Osmangazi"]
+ ],
+ "Eskişehir":[
+  ["Porsuk'ta gondol","Porsuk Çayı'nda gondol ya da tekne turu, ardından nehir kenarında kahve.","romantik",1,"a","Merkez"],
+  ["Odunpazarı evleri","Renkli tarihi evler, cam atölyeleri ve çibörek.","kultur",1,"g","Odunpazarı"],
+  ["OMM müzesi","Odunpazarı Modern Müze'de çağdaş sanat.","kultur",2,"g","Odunpazarı"],
+  ["Sazova Parkı","Masal şatosu ve göl çevresinde çocuklar gibi eğlenin.","eglence",1,"g","Tepebaşı"],
+  ["Kent Park plajı","Yazın yapay plajda serinleme ve akşam yürüyüşü.","doga",1,"g","Tepebaşı"],
+  ["Çibörek & met helvası turu","Tatar böreği çibörek ve met helvası; en iyi yeri birlikte seçin.","yemek",1,"a","Merkez"]
+ ],
+ "Kapadokya":[
+  ["Balonları izleme","Gün doğumu öncesi bir tepeye çıkıp yükselen balonları izleyin. Termos kahve şart.","romantik",1,"g","Göreme"],
+  ["Balon turu","Bütçe varsa birlikte gökyüzünde gün doğumu; unutulmaz bir yıldönümü hediyesi.","macera",3,"g","Göreme"],
+  ["Uçhisar Kalesi gün batımı","Kaleye çıkıp vadinin renk değiştirmesini izleyin.","romantik",1,"a","Uçhisar"],
+  ["Avanos çömlek atölyesi","Birlikte çark başında çömlek yapın, birbirinize hediye edin.","eglence",2,"g","Avanos"],
+  ["Kızılvadi yürüyüşü","Gün batımına doğru vadide yürüyüş; peribacaları arasında fotoğraf.","doga",1,"a","Göreme"]
+ ],
+ "Trabzon":[
+  ["Uzungöl günü","Göl çevresinde yürüyüş, sıcak çay ve muhlama.","doga",2,"g","Çaykara"],
+  ["Sümela Manastırı","Kayaya oyulmuş manastıra yürüyüş; orman havası.","kultur",1,"g","Maçka"],
+  ["Boztepe'de çay","Şehre ve denize karşı semaverde çay, gün batımı.","romantik",1,"a","Ortahisar"],
+  ["Atatürk Köşkü bahçesi","Bahçede yürüyüş ve fotoğraf.","kultur",1,"g","Soğuksu"],
+  ["Akçaabat köftesi","Akçaabat'ta köfte, ardından sahilde yürüyüş.","yemek",1,"a","Akçaabat"]
+ ]
+};
+const ANY=[
+  ["Temalı ev sinema gecesi","Bir tema seçin (90'lar, korku, animasyon), yastıklardan kale kurup patlamış mısır yapın.","evde",1,"a"],
+  ["Birlikte yemek düellosu","Aynı malzemelerle iki farklı yemek yapın, birbirinizinkini puanlayın.","evde",1,"a"],
+  ["Yıldız izleme","Şehir ışıklarından uzak bir tepeye battaniye ve termosla gidin.","romantik",1,"a"],
+  ["Kitapçıda kitap seçme","Birbirinize 15 dakikada kitap seçin, kapağını göstermeden hediye edin.","kultur",2,"g"],
+  ["Seramik ya da resim atölyesi","Tek seanslık atölyede birbirinizin portresini ya da kupasını yapın.","eglence",2,"h"],
+  ["Kaçış oyunu (escape room)","Bir saat içinde birlikte çıkış bulmak tam bir takım testi.","macera",2,"h"],
+  ["Bowling + milkshake","Kaybeden milkshake ısmarlar.","eglence",2,"a"],
+  ["Karaoke gecesi","Birbirinize şarkı seçin, düet şart.","eglence",2,"a"],
+  ["Gün doğumu kahvaltısı","Erkenden kalkıp manzaralı bir yerde güneşi doğurun, kahvaltıyı yanınızda götürün.","romantik",1,"g"],
+  ["Birbirinize mektup","Bir kafede oturup birbirinize el yazısı mektup yazın, bir yıl sonra açın.","romantik",1,"h"],
+  ["Masa oyunu kafe","Yeni bir kutu oyunu öğrenin, skor tablosunu saklayın.","eglence",1,"a"],
+  ["Rastgele otobüs macerası","Bilmediğiniz bir hattın son durağına gidip orayı keşfedin.","macera",1,"g"],
+  ["Pazar + birlikte yemek","Semt pazarından malzeme alıp tarif seçmeden yemek uydurun.","yemek",1,"g"],
+  ["Plakçı & müzik avı","Birbirinize bir albüm seçip akşam evde dinleyin.","kultur",2,"g"],
+  ["Tek gecelik dans dersi","Salsa, tango ya da swing deneme dersi.","eglence",2,"a"],
+  ["Barınağa gönüllü ziyaret","Hayvan barınağında köpek gezdirin, mama götürün.","doga",1,"g"],
+  ["Pastane turu: 3 tatlı","Üç pastanede birer tatlı, 10 üzerinden puan tablosu.","yemek",2,"g"],
+  ["İlk buluşmayı canlandırın","İlk buluştuğunuz yere gidip aynı şeyleri sipariş edin.","romantik",2,"h"],
+  ["Evde spa günü","Maske, ayak banyosu, mum ve sakin müzik.","evde",1,"a"],
+  ["Çocukluk oyunları gecesi","Tabu, isim-şehir, UNO; kaybeden bulaşık yıkar.","evde",1,"a"],
+  ["Derin sorular gecesi","Birbirinize hiç sormadığınız 20 soru hazırlayın, sırayla sorun.","romantik",1,"a"],
+  ["Gün boyu tek renk avı","Bir renk seçin, gün boyu o renkteki şeylerin fotoğrafını çekin.","eglence",1,"g"],
+  ["Bütçeli market meydan okuması","Her biriniz 150 ₺ ile diğerine sürpriz akşam atıştırmalığı alsın.","evde",1,"a"],
+  ["Gelecek panosu","Dergi kesikleri ve fotoğraflarla birlikte hayal panosu yapın.","evde",1,"h"],
+  ["Birlikte puzzle","1000 parçalık bir puzzle, arka planda sevdiğiniz bir çalma listesi.","evde",1,"a"],
+  ["Rollerin değiştiği gün","Birbirinizin en sevdiği günü planlayın; o gün kararları diğeri verir.","romantik",2,"h"],
+  ["Mini golf ya da lazer tag","Rekabetçi bir akşam, kaybeden ertesi kahveyi ısmarlar.","eglence",2,"a"],
+  ["Fotoğraf kabini avı","Bir fotoğraf kabini bulup dört karelik şerit çektirin, buzdolabına asın.","romantik",1,"h"],
+  ["Evde tadım gecesi","Üç çeşit çikolata, peynir ya da kahve; gözler kapalı tahmin oyunu.","evde",2,"a"],
+  ["Bilinmeyen mutfak","Hiç denemediğiniz bir ülke mutfağının restoranını bulun.","yemek",2,"a"],
+  ["Tırmanış salonu","Deneme seansında birbirinizi emniyete alın; güven egzersizi gibi.","macera",2,"h"],
+  ["Konsere gitmek","Küçük bir mekânda hiç dinlemediğiniz bir grubu keşfedin.","eglence",2,"a"],
+  ["Gece bisikleti","Trafiğin azaldığı saatte şehrin sevdiğiniz bir rotasını pedallayın.","macera",1,"a"],
+  ["Fotoğraf albümü gecesi","Telefonlardaki fotoğraflarınızdan en sevdiğiniz 20 tanesini bastırıp albüm yapın.","evde",1,"a"]
+];
+/* Saat: [en erken başlangıç, en geç bitiş, süre(saat)] — 24 üstü gece yarısını geçer */
+const TIME_DEF={g:[9,18,3],a:[16,23,3],h:[10,23,2]};
+const TIME_OVR={
+  "Büyükada'da bisiklet":[8,19,6],"Belgrad Ormanı yürüyüşü":[8,17,4],"Polonezköy kahvaltısı":[8,15,4],"Ortaköy'de kumpir & köprü":[18,24,2],
+  "Atakule'de şehir manzarası":[18,24,2],"CSO Ada Ankara konseri":[20,23,2.5],"Devlet Tiyatrosu oyunu":[20,23,2.5],"Opera ya da bale gecesi":[20,23,3],
+  "Beypazarı günü":[8,20,7],"Soğuksu Milli Parkı":[9,18,6],"Gordion antik kenti":[9,17,5],"Haymana kaplıcası":[9,20,5],"Elmadağ'da kayak":[9,17,5],
+  "Karagöl'de mangal":[9,18,5],"Dikmen Vadisi akşamı":[18,23,2],"Bilkent'te sinema gecesi":[11,24,3],"Gençlik Parkı akşam yürüyüşü":[17,23,2],
+  "Şirince köy günü":[8,19,7],"Alaçatı sokakları":[12,24,5],"Urla bağ rotası":[9,18,5],"Ilıca'da deniz günü":[9,19,6],"Sığacık'ta balık":[11,22,4],
+  "Tekne turu":[9,18,6],"Phaselis koyları":[9,18,6],"Kaleiçi gece yürüyüşü":[17,24,3],
+  "Uludağ günü":[8,18,7],"Gölyazı gün batımı":[10,21,4],"Cumalıkızık köy kahvaltısı":[8,14,3],
+  "Balonları izleme":[5,9,2],"Balon turu":[5,10,3],"Uzungöl günü":[8,19,6],"Sümela Manastırı":[9,17,4],
+  "Yıldız izleme":[21,26,3],"Gün doğumu kahvaltısı":[5,10,3],"Karaoke gecesi":[20,26,3],"Gece bisikleti":[21,25,2],
+  "Tek gecelik dans dersi":[18,23,2],"Konsere gitmek":[20,25,3],"Barınağa gönüllü ziyaret":[10,17,3],"Pazar + birlikte yemek":[8,15,3],
+  "Kemeraltı kahvaltısı":[8,14,3],"Bowling + milkshake":[12,24,2],"Masa oyunu kafe":[11,24,3],"Kaçış oyunu (escape room)":[11,23,2],
+  "Seramik ya da resim atölyesi":[10,21,3],"Mini golf ya da lazer tag":[11,23,2],"Tırmanış salonu":[10,23,2],"Rollerin değiştiği gün":[9,23,8]
+};
+function timing(i){return TIME_OVR[i.t]||(i.cat==="evde"?[10,26,3]:TIME_DEF[i.w]||TIME_DEF.h)}
+function fits(i){const [s,e,d]=timing(i);return Math.min(e,ui.to)-Math.max(s,ui.from)>=d-1e-9}
+function startFor(i){const [s]=timing(i);return ui.anyTime?s:Math.max(s,ui.from)}
+function hh(x){const h=Math.floor(x)%24,m=Math.round((x%1)*60);return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")}
+function durTxt(d){return (d%1?d.toString().replace(".",","):d)+" saat"}
+const CITIES=Object.keys(CITY_IDEAS);
+const BASE=[];
+CITIES.forEach(c=>CITY_IDEAS[c].forEach((x,i)=>BASE.push({id:slug(c)+"-"+(i+1),t:x[0],d:x[1],cat:x[2],b:x[3],w:x[4],p:x[5],city:c})));
+ANY.forEach((x,i)=>BASE.push({id:"any-"+(i+1),t:x[0],d:x[1],cat:x[2],b:x[3],w:x[4],p:"",city:"*"}));
+function slug(s){return s.toLowerCase().replace(/ı/g,"i").replace(/İ/g,"i").replace(/ş/g,"s").replace(/ğ/g,"g").replace(/ü/g,"u").replace(/ö/g,"o").replace(/ç/g,"c").replace(/[^a-z0-9]+/g,"")}
+
+/* ------------------ DURUM ------------------ */
+const ui={tab:"kesfet",city:"İstanbul",cat:"all",budget:0,show:"all",from:12,to:19,anyTime:false};
+try{const s=JSON.parse(localStorage.getItem("bny-ui")||"{}");Object.assign(ui,s);if(!CITIES.includes(ui.city))ui.city="İstanbul"}catch(e){}
+function saveUI(){try{localStorage.setItem("bny-ui",JSON.stringify(ui))}catch(e){}}
+
+const S={votes:{},plans:[],ideas:[],notes:[]}; // votes: key -> {uid,idea,v}
+let db=null,user=null,myId="me",shared=false,readOnly=false;
+const people={}; // id -> {name,avatarUrl}
+
+/* ---- local fallback ---- */
+function loadLocal(){try{const d=JSON.parse(localStorage.getItem("bny-data")||"null");if(d)Object.assign(S,d)}catch(e){}}
+function saveLocal(){if(shared)return;try{localStorage.setItem("bny-data",JSON.stringify(S))}catch(e){}}
+
+/* ------------------ YAZMA İŞLEMLERİ ------------------ */
+function denied(e){
+  if(e&&e.code==="permission-denied"){toast("Kaydedilemedi: Firestore kuralları izin vermiyor.");return}
+  if(e&&e.code==="invalid_argument"){readOnly=true;toast("Bu sayfada değişiklik iznin yok. Sahibinden seni Düzenleyici olarak eklemesini iste.");render()}
+  else if(e&&e.code==="quota_exceeded")toast("Depolama doldu, eski notları silmeyi dene.");
+  else toast("Kaydedilemedi, birazdan tekrar dene.");
+}
+async function setVote(idea,v){
+  if(readOnly)return toast("Sadece görüntüleme izni var.");
+  const key=idea+"~"+myId,cur=S.votes[key];
+  const nv=cur&&cur.v===v?null:v;
+  if(nv)S.votes[key]={uid:myId,idea,v:nv,ts:Date.now()};else delete S.votes[key];
+  render();
+  if(shared){try{const r=db.collection("votes").doc(key);nv?await r.set(S.votes[key]):await r.delete()}catch(e){denied(e)}}else saveLocal();
+  if(nv==="love"){const pv=partnerVote(idea);if(pv==="love")toast("Eşleşme! İkiniz de bayıldınız 💞")}
+}
+function newId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+async function addDoc(col,data){
+  if(readOnly)return toast("Sadece görüntüleme izni var.");
+  const id=newId();data={...data,by:myId,ts:Date.now()};
+  S[col].push({id,...data});render();
+  if(shared){try{await db.collection(col).doc(id).set(data)}catch(e){S[col]=S[col].filter(x=>x.id!==id);denied(e)}}else saveLocal();
+  return id;
+}
+async function patchDoc(col,id,patch){
+  if(readOnly)return toast("Sadece görüntüleme izni var.");
+  const it=S[col].find(x=>x.id===id);if(!it)return;Object.assign(it,patch);render();
+  if(shared){try{await db.collection(col).doc(id).update(patch)}catch(e){denied(e)}}else saveLocal();
+}
+async function delDoc(col,id){
+  if(readOnly)return toast("Sadece görüntüleme izni var.");
+  S[col]=S[col].filter(x=>x.id!==id);render();
+  if(shared){try{await db.collection(col).doc(id).delete()}catch(e){denied(e)}}else saveLocal();
+}
+
+/* ------------------ YARDIMCI ------------------ */
+const $=s=>document.querySelector(s);
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function allIdeas(){return BASE.concat(S.ideas.map(x=>({id:"c-"+x.id,t:x.t,d:x.d||"",cat:x.cat||"romantik",b:+x.b||1,w:x.w||"h",p:x.p||"",city:x.city||"*",custom:true,by:x.by,docId:x.id})))}
+function ideaById(id){return allIdeas().find(x=>x.id===id)}
+function myVote(id){return S.votes[id+"~"+myId]?.v||null}
+function partnerId(){
+  const ids=new Set();Object.values(S.votes).forEach(v=>ids.add(v.uid));S.plans.forEach(p=>ids.add(p.by));S.notes.forEach(n=>ids.add(n.by));S.ideas.forEach(n=>ids.add(n.by));
+  members.forEach(m=>ids.add(m));ids.delete(myId);ids.delete(undefined);return [...ids][0]||null;
+}
+function partnerVote(id){const p=partnerId();return p?S.votes[id+"~"+p]?.v||null:null}
+function pname(id){if(id===myId)return "Sen";return (people[id]&&people[id].name)?people[id].name.split(" ")[0]:"Sevgilin"}
+function pav(id){return people[id]?.avatarUrl||""}
+async function resolvePeople(){return;
+  if(!user)return;const ids=[myId,partnerId()].filter(Boolean);
+  try{const ps=await user.profiles(ids);let ch=false;for(const id of ids){const p=ps[id];if(!p)continue;const o=people[id];if(!o||o.name!==p.name||o.avatarUrl!==p.avatarUrl){people[id]={name:p.name,avatarUrl:p.avatarUrl};ch=true}}if(ch)render(true)}catch(e){}
+}
+const BUD=["","₺","₺₺","₺₺₺"],WHEN={g:"Gündüz",a:"Akşam",h:"Her saat"};
+const AY=["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"],GUN=["Paz","Pzt","Sal","Çar","Per","Cum","Cmt"];
+function today(){const d=new Date();d.setHours(0,0,0,0);return d}
+function pdate(s){const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)}
+function daysTo(s){return Math.round((pdate(s)-today())/864e5)}
+function rel(n){return n===0?"Bugün":n===1?"Yarın":n>1?n+" gün kaldı":Math.abs(n)+" gün önce"}
+function toast(msg){const r=$("#toastRoot");r.innerHTML='<div class="toast" role="status"></div>';r.firstChild.textContent=msg;clearTimeout(toast.t);toast.t=setTimeout(()=>r.innerHTML="",2800)}
+
+function calLinks(p){
+  const [h,mi]=(p.time||"19:00").split(":").map(Number);const st=pdate(p.date);st.setHours(h,mi);const en=new Date(st.getTime()+(+p.dur||3)*36e5);
+  const f=d=>d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0")+"T"+String(d.getHours()).padStart(2,"0")+String(d.getMinutes()).padStart(2,"0")+"00";
+  const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")+"T"+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")+":00";
+  const text="💞 Date: "+p.title,det=(p.note?p.note+"\n\n":"")+"Biz Ne Yapsak? ile planlandı",loc=[p.place,p.city!=="*"?p.city:""].filter(Boolean).join(", ");
+  const g="https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent(text)+"&dates="+f(st)+"/"+f(en)+"&ctz=Europe/Istanbul&details="+encodeURIComponent(det)+"&location="+encodeURIComponent(loc);
+  const o="https://outlook.live.com/calendar/0/deeplink/compose?path=/calendar/action/compose&rru=addevent&subject="+encodeURIComponent(text)+"&startdt="+iso(st)+"&enddt="+iso(en)+"&body="+encodeURIComponent(det)+"&location="+encodeURIComponent(loc);
+  return {g,o};
+}
+
+/* ------------------ ÇİZİM ------------------ */
+function render(skipPeople){
+  $("#cityLabel").textContent=ui.city+"'da date fikirleri";
+  // duo
+  const pid=partnerId();
+  const duo=$("#duo");duo.innerHTML="";
+  const im=(id)=>{const i=document.createElement("img");i.alt=pname(id);i.src=pav(id)||"data:image/svg+xml,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="#E2365B"/><text x="16" y="21" font-size="14" text-anchor="middle" fill="#fff" font-family="sans-serif">'+esc((pname(id)==="Sen"?(people[id]?.name||"S"):pname(id)).charAt(0).toUpperCase())+'</text></svg>');return i};
+  duo.appendChild(im(myId));const h=document.createElement("span");h.className="heart";h.textContent="♥";duo.appendChild(h);
+  if(pid)duo.appendChild(im(pid));else{const g=document.createElement("span");g.className="ghost";g.title="Sevgilin henüz katılmadı";g.textContent="?";duo.appendChild(g)}
+  // cities
+  $("#cities").innerHTML=CITIES.map(c=>`<button class="chip" aria-pressed="${c===ui.city}" data-city="${esc(c)}">${esc(c)}</button>`).join("");
+  // tabs
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.toggleAttribute("aria-current",false)||b.dataset.tab===ui.tab&&b.setAttribute("aria-current","page"));
+  ["kesfet","eslesme","planlar","notlar"].forEach(t=>$("#tab-"+t).hidden=t!==ui.tab);
+  const mc=matches().length;const dot=$("#matchDot");dot.hidden=!mc;dot.textContent=mc;
+  if(ui.tab==="kesfet")renderKesfet();
+  if(ui.tab==="eslesme")renderEslesme();
+  if(ui.tab==="planlar")renderPlanlar();
+  if(ui.tab==="notlar")renderNotlar();
+  if(!skipPeople)resolvePeople();
+}
+
+function cityIdeas(){return allIdeas().filter(i=>i.city===ui.city||i.city==="*")}
+function filtered(){
+  return cityIdeas().filter(i=>(ui.cat==="all"||i.cat===ui.cat)&&(!ui.budget||i.b<=ui.budget)&&(ui.anyTime||fits(i))
+    &&(ui.show==="all"?myVote(i.id)!=="no":ui.show==="new"?!myVote(i.id):ui.show==="partner"?partnerVote(i.id)==="love":myVote(i.id)==="no"));
+}
+function nextPlan(){return S.plans.filter(p=>!p.done&&daysTo(p.date)>=0).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time))[0]}
+
+function banners(){
+  let h="";
+  if(!FIREBASE_CONFIG)h+=`<div class="banner"><b>Şu an sadece bu cihazda kaydediliyor.</b> Ortak kullanım için index.html içine Firebase ayarını eklemek gerekiyor.</div>`;
+  else if(!shared)h+=`<div class="banner">Bağlanılıyor...</div>`;
+  else if(!partnerId())h+=`<div class="banner"><b>Oda kodun: ${esc(room)}</b><br>Sevgilin henüz bu odada değil. Davet linkini gönder; o açınca ekranında da aynı kod görünmeli. <button class="btn soft sm" data-room="1" style="margin-top:8px">Davet linki</button></div>`;
+  return h;
+}
+
+function ideaCard(i){
+  const mv=myVote(i.id),pv=partnerVote(i.id),pid=partnerId(),c=CATS[i.cat]||CATS.romantik;
+  const isMatch=mv==="love"&&pv==="love";
+  const pvTxt={love:"♥ bayıldı",maybe:"belki diyor",no:"pas geçti"}[pv];
+  return `<article class="card ${isMatch?"match":""}">
+    <div class="kicker"><span class="cat" style="--c:${c.c}"><i></i>${c.n}</span>${isMatch?'<span class="badge-match">EŞLEŞME</span>':i.custom?'<span class="tag">Sizin fikriniz</span>':""}</div>
+    <h3>${esc(i.t)}</h3>
+    <p>${esc(i.d)}</p>
+    <div class="meta"><span class="tag">${BUD[i.b]}</span>${timeTag(i)}${i.p?`<span class="tag where">${esc(i.p)}</span>`:i.city==="*"?'<span class="tag where">Her şehirde</span>':""}</div>
+    <div class="perf"></div>
+    <div class="votes">
+      <button class="vote" data-vote="${i.id}" data-v="love" aria-pressed="${mv==="love"}">♥ Bayıldım</button>
+      <button class="vote" data-vote="${i.id}" data-v="maybe" aria-pressed="${mv==="maybe"}">Belki</button>
+      <button class="vote" data-vote="${i.id}" data-v="no" aria-pressed="${mv==="no"}" aria-label="Geç">✕</button>
+      <span class="sp"></span>
+      <button class="btn soft sm" data-plan="${i.id}">Takvime koy</button>
+    </div>
+    ${pid&&pv?`<div class="theirs">${pav(pid)?`<img src="${esc(pav(pid))}" alt="">`:""}<span>${esc(pname(pid))} ${pvTxt}</span></div>`:""}
+  </article>`;
+}
+
+const PRESETS=[[12,19,"Bizim saat 12–19"],[12,16,"Öğle 12–16"],[15,19,"İkindi 15–19"],[9,23,"Tüm gün"]];
+function hourOpts(a,b,sel){let h="";for(let x=a;x<=b;x++)h+=`<option value="${x}" ${x===sel?"selected":""}>${hh(x)}${x>=24?" (gece)":""}</option>`;return h}
+function timeTag(i){
+  const [s,e,d]=timing(i);
+  if(ui.anyTime)return `<span class="tag">${hh(s)}–${hh(e)} · ~${durTxt(d)}</span>`;
+  if(fits(i))return `<span class="tag time">Başlangıç ${hh(startFor(i))} · ~${durTxt(d)}</span>`;
+  return `<span class="tag nofit">Saatinize uymuyor · ${hh(s)}–${hh(e)}</span>`;
+}
+function renderKesfet(){
+  const el=$("#tab-kesfet"),np=nextPlan(),list=filtered();
+  const cats=["all",...Object.keys(CATS)];
+  el.innerHTML=`${banners()}
+  ${np?`<div class="next"><div class="big">${Math.max(0,daysTo(np.date))}<small>gün</small></div><div><b>${esc(np.title)}</b><span>${pdate(np.date).getDate()} ${AY[pdate(np.date).getMonth()]} ${GUN[pdate(np.date).getDay()]} · ${esc(np.time||"")} · ${rel(daysTo(np.date))}</span></div></div>`:""}
+  <div class="actions"><button class="btn cherry" id="spinBtn">Şansımıza bırak</button><button class="btn line" id="addIdeaBtn">+ Kendi fikrimiz</button></div>
+  <div class="filters" role="group" aria-label="Kategori">${cats.map(k=>`<button class="chip sm" data-cat="${k}" aria-pressed="${ui.cat===k}">${k==="all"?"Hepsi":CATS[k].n}</button>`).join("")}</div>
+  <div class="timebox">
+    <div class="tb-head"><b>Buluşma saatleriniz</b><button class="chip sm" data-anytime="1" aria-pressed="${ui.anyTime}">Saat fark etmez</button></div>
+    <div class="tb-sel ${ui.anyTime?"off":""}">
+      <div class="field"><label for="tFrom">Başlangıç</label><select id="tFrom" ${ui.anyTime?"disabled":""}>${hourOpts(5,23,ui.from)}</select></div>
+      <span class="tb-dash">–</span>
+      <div class="field"><label for="tTo">Bitiş</label><select id="tTo" ${ui.anyTime?"disabled":""}>${hourOpts(6,26,ui.to)}</select></div>
+    </div>
+    <div class="filters" role="group" aria-label="Hazır saatler">${PRESETS.map(([a,b,n])=>`<button class="chip sm" data-preset="${a}-${b}" aria-pressed="${!ui.anyTime&&ui.from===a&&ui.to===b}">${n}</button>`).join("")}</div>
+  </div>
+  <div class="seg" role="group" aria-label="Bütçe">${[0,1,2,3].map(b=>`<button data-bud="${b}" aria-pressed="${ui.budget===b}">${b?BUD[b]:"Her bütçe"}</button>`).join("")}</div>
+  <div class="filters" role="group" aria-label="Göster">${[["all","Tümü"],["new","Henüz oylamadıklarım"],["partner",esc(pname(partnerId()||""))+" bayıldı"],["no","Geçtiklerim"]].map(([k,n])=>`<button class="chip sm" data-show="${k}" aria-pressed="${ui.show===k}">${n}</button>`).join("")}</div>
+  <div class="count">${list.length} fikir${ui.anyTime?"":" "+hh(ui.from)+"–"+hh(ui.to)+" arasına sığıyor"} · ${esc(ui.city)} + her yerde yapılabilecekler</div>
+  ${list.length?list.map(ideaCard).join(""):`<div class="empty"><b>Bu filtrede fikir kalmadı</b>Filtreleri gevşetin ya da kendi fikrinizi ekleyin.</div>`}`;
+}
+
+function matches(){return allIdeas().filter(i=>myVote(i.id)==="love"&&partnerVote(i.id)==="love")}
+function renderEslesme(){
+  const el=$("#tab-eslesme"),pid=partnerId(),m=matches();
+  const onlyMe=allIdeas().filter(i=>myVote(i.id)==="love"&&partnerVote(i.id)!=="love");
+  const onlyThem=pid?allIdeas().filter(i=>partnerVote(i.id)==="love"&&myVote(i.id)!=="love"):[];
+  const maybe=allIdeas().filter(i=>(myVote(i.id)==="love"&&partnerVote(i.id)==="maybe")||(myVote(i.id)==="maybe"&&partnerVote(i.id)==="love"));
+  el.innerHTML=`${banners()}<h2>İkiniz de bayıldınız</h2><p class="sub">İkinizin de kalp attığı fikirler. Bir tanesini seçip takvime koyun.</p>
+  ${m.length?m.map(ideaCard).join(""):`<div class="empty"><b>Henüz eşleşme yok</b>${pid?"Keşfet'te kalp atmaya devam edin, ortak beğeniler burada toplanır.":"Sevgilin de oy verince ortak beğenileriniz burada belirecek."}</div>`}
+  ${maybe.length?`<h2>Az kaldı</h2><p class="sub">Biriniz bayıldı, diğeri "belki" dedi. İkna zamanı.</p>${maybe.map(ideaCard).join("")}`:""}
+  ${onlyThem.length?`<h2>${esc(pname(pid))} bunlara bayıldı</h2><p class="sub">Sen henüz kalp atmadın. Belki sürpriz yaparsın?</p>${onlyThem.map(ideaCard).join("")}`:""}
+  ${onlyMe.length?`<h2>Senin kalplerin</h2><p class="sub">${pid?esc(pname(pid))+" henüz bunlara kalp atmadı.":"Sevgilin katılınca kıyaslanacak."}</p>${onlyMe.map(ideaCard).join("")}`:""}`;
+}
+
+function planCard(p){
+  const d=pdate(p.date),n=daysTo(p.date),past=p.done||n<0,{g,o}=calLinks(p);
+  const r=+p.rating||0;
+  return `<article class="plan ${past?"past":""}">
+    <div class="date"><span class="d">${d.getDate()}</span><span class="m">${AY[d.getMonth()]}</span><span class="w">${GUN[d.getDay()]} ${esc(p.time||"")}</span></div>
+    <div class="body">
+      ${!past?`<span class="when-pill">${rel(n)}</span>`:""}
+      <h4>${esc(p.title)}</h4>
+      <div class="info">${esc([p.place,p.city!=="*"?p.city:""].filter(Boolean).join(", "))}${p.place||p.city!=="*"?" · ":""}${esc(pname(p.by))} planladı</div>
+      ${p.note?`<div class="note">${esc(p.note)}</div>`:""}
+      ${!past?`<div class="cal"><a href="${g}" target="_blank" rel="noopener">Google Takvim'e ekle</a><a href="${o}" target="_blank" rel="noopener">Outlook'a ekle</a></div>
+        <div class="row"><button class="btn soft sm" data-done="${p.id}">Yaptık ✓</button><button class="btn line sm" data-edit="${p.id}">Düzenle</button><button class="btn line sm" data-del="${p.id}">Sil</button></div>`
+      :`<div class="stars" role="group" aria-label="Puan">${[1,2,3,4,5].map(s=>`<button class="${s<=r?"on":""}" data-rate="${p.id}" data-s="${s}" aria-label="${s} yıldız">★</button>`).join("")}</div>
+        ${p.memory?`<div class="memo">“${esc(p.memory)}”</div>`:""}
+        <div class="row"><button class="btn soft sm" data-memo="${p.id}">${p.memory?"Anıyı düzenle":"Anı yaz"}</button><button class="btn line sm" data-del="${p.id}">Sil</button></div>`}
+    </div></article>`;
+}
+function renderPlanlar(){
+  const el=$("#tab-planlar");
+  const up=S.plans.filter(p=>!p.done&&daysTo(p.date)>=0).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  const past=S.plans.filter(p=>p.done||daysTo(p.date)<0).sort((a,b)=>(b.date).localeCompare(a.date));
+  const doneN=S.plans.filter(p=>p.done).length;
+  el.innerHTML=`${banners()}<div class="actions"><button class="btn primary" data-plan="__free">+ Yeni date planla</button><button class="btn line" id="spinBtn2">Şansımıza bırak</button></div>
+  <h2>Yaklaşanlar</h2>
+  ${up.length?up.map(planCard).join(""):`<div class="empty"><b>Takvim boş</b>Keşfet'ten bir fikrin altındaki "Takvime koy"a dokunun.</div>`}
+  <h2>Anı defteri</h2><p class="sub">${doneN?doneN+" date yaptınız. Yıldız verin, bir cümle anı bırakın.":"Yaptığınız date'ler burada birikecek."}</p>
+  ${past.map(planCard).join("")}`;
+}
+const NOTE_COLORS=["#FCDDE4","#FDF0D2","#D8F2EA","#E6DDF7","#DCEBFB"];
+function renderNotlar(){
+  const el=$("#tab-notlar");
+  const ns=[...S.notes].sort((a,b)=>b.ts-a.ts);
+  el.innerHTML=`${banners()}<h2>Küçük notlar</h2><p class="sub">Birbirinize tatlı bir şey bırakın. Açtığında karşısına çıksın.</p>
+  <div class="field"><label for="noteIn">Notun</label><textarea id="noteIn" rows="3" maxlength="280" placeholder="Bugün gülüşün aklımdan çıkmadı..."></textarea></div>
+  <button class="btn cherry" id="noteBtn">Notu bırak</button>
+  ${ns.length?`<div class="notes">${ns.map((n,k)=>`<div class="note-card" style="--c:${NOTE_COLORS[(n.ts||k)%5]};--rot:${((n.ts||k)%5-2)*.6}deg"><p>${esc(n.text)}</p><div class="by"><span>${esc(pname(n.by))} · ${new Date(n.ts).getDate()} ${AY[new Date(n.ts).getMonth()]}</span>${n.by===myId?`<button class="x" data-delnote="${n.id}" aria-label="Notu sil">×</button>`:""}</div></div>`).join("")}</div>`:`<div class="empty"><b>Henüz not yok</b>İlk tatlı notu sen bırak.</div>`}`;
+}
+
+/* ------------------ SAYFALAR (SHEET) ------------------ */
+let sheetLocked=false;
+function sheet(html,onMount,lock){
+  sheetLocked=!!lock;const r=$("#sheetRoot");r.innerHTML=`<div class="sheet-bg"><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div></div>`;
+  r.firstChild.addEventListener("click",e=>{if(e.target===r.firstChild&&!sheetLocked)closeSheet()});
+  onMount&&onMount(r.querySelector(".sheet"));
+  const f=r.querySelector("input,textarea,select,button");f&&f.focus();
+}
+function closeSheet(){$("#sheetRoot").innerHTML=""}
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!sheetLocked)closeSheet()});
+
+function planSheet(ideaId,editId){
+  const ed=editId?S.plans.find(p=>p.id===editId):null;
+  const i=ed?null:ideaId!=="__free"?ideaById(ideaId):null;
+  const d=new Date();d.setDate(d.getDate()+((6-d.getDay()+7)%7||7));
+  const def=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  const t=ed?ed.title:i?i.t:"",place=ed?ed.place:i?i.p:"",time=ed?ed.time:i?hh(startFor(i)):hh(ui.anyTime?19:ui.from);
+  const defDur=ed?+ed.dur:i?Math.min(8,Math.ceil(timing(i)[2])):3;
+  sheet(`<h3>${ed?"Planı düzenle":"Date planla"}</h3>
+    <div class="field"><label for="pTitle">Ne yapıyoruz?</label><input id="pTitle" maxlength="80" value="${esc(t)}" placeholder="Örn. Moda'da gün batımı"></div>
+    <div class="grid2"><div class="field"><label for="pDate">Tarih</label><input id="pDate" type="date" value="${esc(ed?ed.date:def)}"></div>
+    <div class="field"><label for="pTime">Saat</label><input id="pTime" type="time" value="${esc(time)}"></div></div>
+    <div class="grid2"><div class="field"><label for="pPlace">Yer</label><input id="pPlace" maxlength="80" value="${esc(place||"")}" placeholder="Opsiyonel"></div>
+    <div class="field"><label for="pDur">Süre</label><select id="pDur">${[1,2,3,4,5,6,7,8].map(h=>`<option value="${h}" ${defDur===h?"selected":""}>${h} saat</option>`).join("")}</select></div></div>
+    <div class="field"><label for="pNote">Not (giyim, rezervasyon, sürpriz ipucu...)</label><textarea id="pNote" rows="2" maxlength="240">${esc(ed?ed.note:"")}</textarea></div>
+    <div class="actions"><button class="btn line" id="pCancel">Vazgeç</button><button class="btn cherry" id="pSave">${ed?"Kaydet":"Takvime koy"}</button></div>`,s=>{
+      s.querySelector("#pCancel").onclick=closeSheet;
+      s.querySelector("#pSave").onclick=async()=>{
+        const data={title:$("#pTitle").value.trim(),date:$("#pDate").value,time:$("#pTime").value,place:$("#pPlace").value.trim(),dur:+$("#pDur").value,note:$("#pNote").value.trim()};
+        if(!data.title)return toast("Ne yapacağınızı yazın.");if(!data.date)return toast("Bir tarih seçin.");
+        closeSheet();
+        if(ed){await patchDoc("plans",ed.id,data);toast("Plan güncellendi.")}
+        else{await addDoc("plans",{...data,idea:i?i.id:"",city:i?i.city:ui.city,done:false,rating:0,memory:""});if(!readOnly){toast("Planlandı! Takvim butonlarıyla telefonuna da ekle.");ui.tab="planlar";saveUI();render()}}
+      };
+    });
+}
+function memoSheet(id){
+  const p=S.plans.find(x=>x.id===id);
+  sheet(`<h3>Bu date nasıldı?</h3><div class="field"><label for="mIn">Bir cümlelik anı</label><textarea id="mIn" rows="3" maxlength="240" placeholder="En çok güldüğümüz an...">${esc(p.memory||"")}</textarea></div>
+  <div class="actions"><button class="btn line" id="mC">Vazgeç</button><button class="btn cherry" id="mS">Kaydet</button></div>`,s=>{
+    s.querySelector("#mC").onclick=closeSheet;s.querySelector("#mS").onclick=()=>{patchDoc("plans",id,{memory:$("#mIn").value.trim()});closeSheet()}});
+}
+function ideaSheet(){
+  sheet(`<h3>Kendi fikrimiz</h3>
+  <div class="field"><label for="iT">Fikir</label><input id="iT" maxlength="70" placeholder="Örn. Sabah 6'da Galata Köprüsü'nde balık ekmek"></div>
+  <div class="field"><label for="iD">Kısa açıklama</label><textarea id="iD" rows="2" maxlength="200"></textarea></div>
+  <div class="grid2"><div class="field"><label for="iC">Kategori</label><select id="iC">${Object.entries(CATS).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join("")}</select></div>
+  <div class="field"><label for="iB">Bütçe</label><select id="iB"><option value="1">₺</option><option value="2">₺₺</option><option value="3">₺₺₺</option></select></div></div>
+  <div class="grid2"><div class="field"><label for="iW">Zaman</label><select id="iW"><option value="h">Her saat</option><option value="g">Gündüz</option><option value="a">Akşam</option></select></div>
+  <div class="field"><label for="iCity">Şehir</label><select id="iCity">${CITIES.map(c=>`<option ${c===ui.city?"selected":""}>${esc(c)}</option>`).join("")}<option value="*">Her yerde</option></select></div></div>
+  <div class="field"><label for="iP">Yer</label><input id="iP" maxlength="60" placeholder="Opsiyonel"></div>
+  <div class="actions"><button class="btn line" id="iX">Vazgeç</button><button class="btn cherry" id="iS">Ekle</button></div>`,s=>{
+    s.querySelector("#iX").onclick=closeSheet;
+    s.querySelector("#iS").onclick=async()=>{const t=$("#iT").value.trim();if(!t)return toast("Fikre bir isim verin.");
+      const data={t,d:$("#iD").value.trim(),cat:$("#iC").value,b:+$("#iB").value,w:$("#iW").value,city:$("#iCity").value,p:$("#iP").value.trim()};
+      closeSheet();const id=await addDoc("ideas",data);if(id&&!readOnly){toast("Fikriniz eklendi, ilk kalbi de attık.");setVote("c-"+id,"love")}};
+  });
+}
+function spinSheet(){
+  let pool=filtered().filter(i=>myVote(i.id)!=="no");
+  const loved=pool.filter(i=>myVote(i.id)==="love"||partnerVote(i.id)==="love");
+  sheet(`<h3>Şansımıza bırakalım</h3>
+  <div class="seg" role="group" aria-label="Havuz"><button data-pool="all" aria-pressed="true">Filtredeki tüm fikirler (${pool.length})</button><button data-pool="love" aria-pressed="false">Kalp atılanlar (${loved.length})</button></div>
+  <div class="wheel" id="wheel"><div class="c" id="wc">hazır mısınız?</div><div class="t" id="wt">Çevir ve kader seçsin</div></div>
+  <div class="actions"><button class="btn primary" id="wGo">Çevir</button><button class="btn cherry" id="wPlan" disabled>Bunu planla</button></div>
+  <button class="btn line sm" id="wX">Kapat</button>`,s=>{
+    let usePool=pool,picked=null;
+    s.querySelectorAll("[data-pool]").forEach(b=>b.onclick=()=>{s.querySelectorAll("[data-pool]").forEach(x=>x.setAttribute("aria-pressed",x===b));usePool=b.dataset.pool==="love"?loved:pool});
+    s.querySelector("#wX").onclick=closeSheet;
+    s.querySelector("#wGo").onclick=()=>{
+      if(!usePool.length)return toast("Bu havuzda fikir yok.");
+      const w=s.querySelector("#wheel"),go=s.querySelector("#wGo");go.disabled=true;w.classList.add("spin");
+      const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;let n=0,steps=reduce?1:18;
+      const tick=()=>{const it=usePool[Math.floor(Math.random()*usePool.length)];s.querySelector("#wt").textContent=it.t;s.querySelector("#wc").textContent=(CATS[it.cat]||{}).n||"";picked=it;
+        if(++n<steps)setTimeout(tick,50+n*12);else{w.classList.remove("spin");go.disabled=false;go.textContent="Tekrar çevir";s.querySelector("#wPlan").disabled=false}};
+      tick();
+    };
+    s.querySelector("#wPlan").onclick=()=>{if(picked)planSheet(picked.id)};
+  });
+}
+
+/* ------------------ OLAYLAR ------------------ */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button");if(!t)return;
+  if(t.dataset.city){ui.city=t.dataset.city;ui.tab="kesfet";saveUI();render();scrollTo({top:0});return}
+  if(t.dataset.tab){ui.tab=t.dataset.tab;saveUI();render();scrollTo({top:0});return}
+  if(t.dataset.cat){ui.cat=t.dataset.cat;saveUI();render();return}
+  if(t.dataset.bud!==undefined){ui.budget=+t.dataset.bud;saveUI();render();return}
+  if(t.dataset.anytime){ui.anyTime=!ui.anyTime;saveUI();render();return}
+  if(t.dataset.preset){const [a,b]=t.dataset.preset.split("-").map(Number);ui.from=a;ui.to=b;ui.anyTime=false;saveUI();render();return}
+  if(t.dataset.show){ui.show=t.dataset.show;saveUI();render();return}
+  if(t.dataset.vote){setVote(t.dataset.vote,t.dataset.v);return}
+  if(t.dataset.plan){planSheet(t.dataset.plan);return}
+  if(t.dataset.edit){planSheet(null,t.dataset.edit);return}
+  if(t.dataset.done){patchDoc("plans",t.dataset.done,{done:true});toast("Harika! Şimdi yıldız verip anı yazın.");return}
+  if(t.dataset.del){const id=t.dataset.del;if(t.dataset.sure){delDoc("plans",id)}else{t.dataset.sure="1";t.textContent="Emin misin?";setTimeout(()=>{if(t.isConnected){delete t.dataset.sure;t.textContent="Sil"}},3000)}return}
+  if(t.dataset.rate){patchDoc("plans",t.dataset.rate,{rating:+t.dataset.s});return}
+  if(t.dataset.memo){memoSheet(t.dataset.memo);return}
+  if(t.dataset.delnote){delDoc("notes",t.dataset.delnote);return}
+  if(t.dataset.room){roomSheet();return}
+  if(t.id==="spinBtn"||t.id==="spinBtn2"){spinSheet();return}
+  if(t.id==="addIdeaBtn"){ideaSheet();return}
+  if(t.id==="noteBtn"){const v=$("#noteIn").value.trim();if(!v)return toast("Önce bir şey yaz.");addDoc("notes",{text:v});return}
+});
+
+document.addEventListener("change",e=>{
+  const id=e.target.id;if(id!=="tFrom"&&id!=="tTo")return;
+  let a=+$("#tFrom").value,b=+$("#tTo").value;
+  if(b<=a){if(id==="tFrom")b=a+1;else a=b-1}
+  ui.from=a;ui.to=b;saveUI();render();
+  const el=$("#"+id);el&&el.focus();
+});
+/* ------------------ ODA (FIREBASE) ------------------ */
+let fs=null,room=null,unsubs=[],members=[];
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}
+function roomLink(){return location.origin+location.pathname+"#"+room}
+function newCode(){const a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let c="";const r=crypto.getRandomValues(new Uint32Array(8));for(const x of r)c+=a[x%a.length];return c}
+function cleanCode(v){return String(v||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,12)}
+
+function onboard(){
+  const fromHash=cleanCode(location.hash.slice(1));
+  sheet(`<h3>${fromHash?"Seni bekleyen bir oda var":"Hoş geldiniz"}</h3>
+  <p class="sub" style="margin:0">${fromHash?"Sevgilin seni davet etti. Adını yaz ve katıl.":"Adını yaz, sonra yeni bir oda kur ya da sevgilinden aldığın kodla katıl."}</p>
+  <div class="field"><label for="obName">Adın</label><input id="obName" maxlength="24" value="${esc(lsGet("bny-name")||"")}" placeholder="Örn. Doğukan"></div>
+  ${fromHash?`<div class="code">${fromHash}</div><button class="btn cherry" id="obJoin">Odaya katıl</button>`
+  :`<button class="btn cherry" id="obNew">Yeni oda kur</button><div class="or">ya da</div>
+   <div class="field"><label for="obCode">Oda kodu</label><input id="obCode" maxlength="12" placeholder="Sevgilinin gönderdiği kod" autocapitalize="characters"></div>
+   <button class="btn primary" id="obJoin">Koda katıl</button>`}`,s=>{
+    const go=async code=>{const n=$("#obName").value.trim();if(!n)return toast("Önce adını yaz.");if(!code||code.length<6)return toast("Geçerli bir oda kodu gir.");lsSet("bny-name",n);closeSheet();await joinRoom(code,true);if(!fromHash)roomSheet()};
+    const nb=s.querySelector("#obNew");if(nb)nb.onclick=()=>go(newCode());
+    s.querySelector("#obJoin").onclick=()=>go(fromHash||cleanCode($("#obCode").value));
+  },true);
+}
+
+async function joinRoom(code,isNew){
+  unsubs.forEach(u=>u());unsubs=[];
+  room=code;lsSet("bny-room-v2",code);
+  if(location.hash.slice(1)!==code)history.replaceState(null,"","#"+code);
+  const base=fs.collection("rooms").doc(code);
+  db={collection:name=>base.collection(name)};
+  shared=true;readOnly=false;
+  S.votes={};S.plans=[];S.ideas=[];S.notes=[];members=[];
+  try{await base.collection("members").doc(myId).set({name:lsGet("bny-name")||"",ts:Date.now()})}catch(e){denied(e)}
+  const err=e=>{console.error(e);if(e&&e.code==="permission-denied")toast("Veriler okunamadı: Firestore kurallarını kontrol et.")};
+  unsubs.push(base.collection("members").onSnapshot(s=>{members=s.docs.map(x=>x.id);s.docs.forEach(x=>{people[x.id]={name:x.data().name||"",avatarUrl:""}});render()},err));
+  unsubs.push(db.collection("votes").onSnapshot(s=>{const m={};s.docs.forEach(x=>{const v=x.data();if(v&&v.uid&&v.idea&&v.v)m[x.id]=v});S.votes=m;render()},err));
+  ["plans","ideas","notes"].forEach(col=>unsubs.push(db.collection(col).onSnapshot(s=>{S[col]=s.docs.map(x=>({id:x.id,...x.data()}));render()},err)));
+  render();
+}
+
+function roomSheet(){
+  if(!shared){toast(FIREBASE_CONFIG?"Henüz bağlanmadı.":"Ortak kullanım için önce Firebase ayarı gerekli.");return}
+  const canShare=!!navigator.share;
+  sheet(`<h3>Odanız</h3>
+  <p class="sub" style="margin:0">Bu linki ya da kodu sevgiline gönder. Açtığında ikiniz aynı listeyi, eşleşmeleri ve planları görürsünüz.</p>
+  <div class="code">${esc(room)}</div>
+  <div class="banner"><b>Odadakiler:</b> ${members.length?members.map(id=>esc(id===myId?(people[id]?.name||"Sen")+" (sen)":(people[id]?.name||"Sevgilin"))).join(" · "):"yükleniyor..."}</div>
+  <div class="field"><label for="rLink">Davet linki</label><input id="rLink" readonly value="${esc(roomLink())}"></div>
+  <div class="actions"><button class="btn cherry" id="rCopy">Linki kopyala</button>${canShare?'<button class="btn primary" id="rShare">Paylaş</button>':'<button class="btn line" id="rX">Kapat</button>'}</div>
+  <div class="field"><label for="rName">Adın</label><input id="rName" maxlength="24" value="${esc(lsGet("bny-name")||"")}"></div>
+  <div class="actions"><button class="btn soft" id="rSave">Adı kaydet</button><button class="btn line" id="rLeave">Odadan çık</button></div>`,s=>{
+    s.querySelector("#rCopy").onclick=async()=>{try{await navigator.clipboard.writeText(roomLink());toast("Link kopyalandı.")}catch(e){const i=$("#rLink");i.focus();i.select();toast("Linki seçtim, kopyalayabilirsin.")}};
+    const sh=s.querySelector("#rShare");if(sh)sh.onclick=()=>navigator.share({title:"Biz Ne Yapsak?",text:"Date planlarımız için odama gel 💞",url:roomLink()}).catch(()=>{});
+    const x=s.querySelector("#rX");if(x)x.onclick=closeSheet;
+    s.querySelector("#rSave").onclick=async()=>{const n=$("#rName").value.trim();if(!n)return;lsSet("bny-name",n);try{await db.collection("members").doc(myId).set({name:n,ts:Date.now()})}catch(e){denied(e)}closeSheet();toast("Adın güncellendi.")};
+    s.querySelector("#rLeave").onclick=e=>{const b=e.currentTarget;if(!b.dataset.sure){b.dataset.sure="1";b.textContent="Emin misin?";return}
+      unsubs.forEach(u=>u());unsubs=[];shared=false;room=null;lsSet("bny-room-v2",null);history.replaceState(null,"",location.pathname);closeSheet();loadLocal();render();onboard()};
+  });
+}
+
+/* ------------------ BAŞLAT ------------------ */
+loadLocal();render();
+(async()=>{
+  if(!FIREBASE_CONFIG||!window.firebase)return;
+  try{
+    firebase.initializeApp(FIREBASE_CONFIG);
+    fs=firebase.firestore();
+    const cred=await firebase.auth().signInAnonymously();
+    myId=cred.user.uid;
+  }catch(e){console.error(e);toast("Firebase'e bağlanılamadı. Anonim girişin açık olduğunu kontrol et.");return}
+  const hashCode=cleanCode(location.hash.slice(1)),saved=lsGet("bny-room-v2"),name=lsGet("bny-name");
+  if(hashCode&&hashCode!==saved){onboard();return}
+  if(saved&&name){joinRoom(saved);return}
+  onboard();
+})();
+window.addEventListener("hashchange",()=>{const c=cleanCode(location.hash.slice(1));if(fs&&c&&c!==room)onboard()});
+</script>
+</body>
+</html>

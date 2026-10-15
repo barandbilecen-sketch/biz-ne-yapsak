@@ -427,7 +427,9 @@ function saveLocal(){if(shared)return;try{localStorage.setItem("bny-data",JSON.s
 
 /* ------------------ YAZMA İŞLEMLERİ ------------------ */
 function denied(e){
-  if(e&&e.code==="permission-denied"){toast("Kaydedilemedi: Firestore kuralları izin vermiyor.");return}
+  if(e&&e.code==="permission-denied"){
+    try{const u=firebase.auth().currentUser;if(u)u.getIdToken(true)}catch(_){}
+    toast(/WhatsApp|Instagram|FBAN|FBAV/i.test(navigator.userAgent)?"Kaydedilemedi. Sayfayı Safari ya da Chrome'da açmayı dene (••• → Tarayıcıda aç).":"Kaydedilemedi: bağlantı izni yok. Sayfayı yenileyip tekrar dene.");return}
   if(e&&e.code==="invalid_argument"){readOnly=true;toast("Bu sayfada değişiklik iznin yok. Sahibinden seni Düzenleyici olarak eklemesini iste.");render()}
   else if(e&&e.code==="quota_exceeded")toast("Depolama doldu, eski notları silmeyi dene.");
   else toast("Kaydedilemedi, birazdan tekrar dene.");
@@ -526,6 +528,7 @@ function nextPlan(){return S.plans.filter(p=>!p.done&&daysTo(p.date)>=0).sort((a
 
 function banners(){
   let h="";
+  if(/WhatsApp|Instagram|FBAN|FBAV/i.test(navigator.userAgent))h+=`<div class="banner"><b>Uygulama içi tarayıcıdasın.</b> En sorunsuz kullanım için ••• menüsünden <b>Safari'de / Tarayıcıda aç</b>.</div>`;
   if(!FIREBASE_CONFIG)h+=`<div class="banner"><b>Şu an sadece bu cihazda kaydediliyor.</b> Ortak kullanım için index.html içine Firebase ayarını eklemek gerekiyor.</div>`;
   else if(!shared)h+=`<div class="banner">Bağlanılıyor...</div>`;
   else if(!partnerId())h+=`<div class="banner"><b>Oda kodun: ${esc(room)}</b><br>Sevgilin henüz bu odada değil. Davet linkini gönder; o açınca ekranında da aynı kod görünmeli. <button class="btn soft sm" data-room="1" style="margin-top:8px">Davet linki</button></div>`;
@@ -811,9 +814,14 @@ loadLocal();render();
   if(!FIREBASE_CONFIG||!window.firebase)return;
   try{
     firebase.initializeApp(FIREBASE_CONFIG);
+    const auth=firebase.auth();
+    // Uygulama içi tarayıcılarda (WhatsApp, Instagram) kalıcı depolama bozuk olabiliyor: yedek olarak bellekte tut
+    try{await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)}catch(e){try{await auth.setPersistence(firebase.auth.Auth.Persistence.NONE)}catch(_){}}
     fs=firebase.firestore();
-    const cred=await firebase.auth().signInAnonymously();
-    myId=cred.user.uid;
+    try{fs.settings({experimentalAutoDetectLongPolling:true,merge:true})}catch(e){}
+    const u=auth.currentUser||(await auth.signInAnonymously()).user;
+    await u.getIdToken(true); // Firestore'a gitmeden önce oturum belgesinin hazır olduğundan emin ol
+    myId=u.uid;
   }catch(e){console.error(e);toast("Firebase'e bağlanılamadı. Anonim girişin açık olduğunu kontrol et.");return}
   const hashCode=cleanCode(location.hash.slice(1)),saved=lsGet("bny-room-v2"),name=lsGet("bny-name");
   if(hashCode&&hashCode!==saved){onboard();return}
